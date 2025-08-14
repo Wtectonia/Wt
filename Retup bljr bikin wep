@@ -1,0 +1,292 @@
+<!doctype html>
+
+<html lang="id">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>halo cuy</title>
+  <meta name="description" content="Contoh website sederhana: navbar, hero, fitur, portofolio, kontak." />
+  <style>
+    /* Reset sederhana */
+    ::backdrop url
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+    
+    body {
+      font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+      line-height: 1.6;
+      color: #111
+    }
+    
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 1rem
+    }
+    
+    /* Navbar */
+    header {
+      background: linear-gradient(90deg, #0ea5a4, #3b82f6);
+      color: white
+    }
+    
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1rem
+    }
+    
+    .brand {
+      font-weight: 700;
+      font-size: 1.125rem
+    }
+    
+    .nav-links {
+      display: flex;
+      gap: 1rem
+    }
+    
+    .nav-links a {
+      color: rgba(255, 255, 255, 0.95);
+      text-decoration: none;
+      padding: 0.5rem;
+      border-radius: 6px
+    }
+    
+    .nav-links a:hover {
+      background: rgba(255, 255, 255, 0.12)
+    }
+    
+    .cta {
+      background: white;
+      color: #0b5560;
+      padding: 0.5rem 0.8rem;
+      border-radius: 8px;
+      font-weight: 600
+    }
+    
+    /* Hero */
+    .hero {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.25rem;
+      padding: 3.5rem 0
+    }
+    
+    .hero h1 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem
+    }
+    
+    .hero p {
+      color: #334155
+    }
+    
+    .hero-buttons {
+      margin-top: 1rem;
+      display: flex;
+      gap: 0.75rem
+    }
+    
+    /* Fitur */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin: 2rem 0
+    }
+    
+    .card {
+      background: #fff;
+      border: 1px solid #e6edf3;
+      padding: 1rem;
+      border-radius: 10px;
+      box-shadow: 0 6px 18px rgba(12, 20, 30, 0.04)
+    }
+    
+    .card h3 {
+      margin-bottom: 0.5rem
+    }
+    
+    /* Portofolio */
+    .grid-portfolio {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem
+    }
+    
+    .thumb {
+      height: 140px;
+      background: #f1f5f9;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #0f172a
+    }
+    
+    /* Kontak */
+    form {
+      display: grid;
+      gap: 0.75rem
+    }
+    
+    input,
+    textarea {
+      padding: 0.65rem;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1
+    }
+    
+    button {
+      padding: 0.7rem 1rem;
+      border-radius: 8px;
+      border: 0;
+      background: #06b6d4;
+      color: white;
+      font-weight: 600
+    }
+    
+    /* Footer */
+    footer {
+      padding: 1.25rem 0;
+      color: #475569;
+      text-align: center
+    }
+    
+    /* Responsive tweak */
+    @media(min-width:800px) {
+      .hero {
+        grid-template-columns: 1fr 420px;
+        align-items: center
+      }
+      
+      .hero h1 {
+        font-size: 2.25rem
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="container nav">
+      <div class="brand">Namawkwk</div>
+      <nav class="nav-links">
+        <a href="#features">apa</a>
+        <a href="#portfolio">Portofolio</a>
+        <a href="#contact">daftar cik</a>
+        <a class="cta" href="#contact">Mulai</a>
+      </nav>
+    </div>
+  </header>
+  <main class="container">
+    <section class="hero">
+      <div>
+        <h1>web terkeren jir wkwk</h1>
+        <p>Tutor dong bang 😹</p>
+        <div class="hero-buttons">
+          <a class="cta" href="#contact">Coba Sekarang</a>
+          <a href="#features" style="align-self:center;padding:0.5rem 0.75rem;border-radius:8px;background:#eef2ff;color:#3730a3;text-decoration:none;font-weight:600">Pelajari Fitur</a>
+        </div>
+        <ul style="margin-top:1rem;color:#334155;list-style:disc;padding-left:1rem">
+          <li>HTML + CSS + JavaScript</li>
+          <li>Responsive (mobile & desktop)</li>
+          <li>Mudah di-deploy ke GitHub</li>
+        </ul>
+      </div>
+      <aside class="card">
+        <h3>Masukkan data singkat aja</h3>
+        <p style="color:#475569;margin-bottom:0.75rem">Isi nama dan email lu.</p>
+        <form id="demoForm">
+          <input id="name" placeholder="Nama" required />
+          <input id="email" placeholder="Email" type="email" required />
+          <button type="submit">pencet ini buat ngirim</button>
+        </form>
+        <p id="demoMsg" style="margin-top:0.75rem;color:green;display:none"></p>
+      </aside>
+    </section>
+    
+    <section id="features">
+      <h2>pitur?</h2>
+      <div class="features">
+        <div class="card">
+          <h3>hiarukan saja</h3>
+          <p>fiturnya ga ada wkwk</p>
+        </div>
+        <div class="card">
+          <h3>knjd badag</h3>
+          <p>Beungeut sia.</p>
+        </div>
+        <div class="card">
+          <h3>satu duwa</h3>
+          <p>aduh keluar dikit jir.</p>
+        </div>
+      </div>
+    </section>
+    
+    <section id="portfolio">
+      <h2>😹</h2>
+      <div class="grid-portfolio">
+        <div class="thumb card">kanjud</div>
+        <div class="thumb card">knjd</div>
+        <div class="thumb card">kjd</div>
+        <div class="thumb card">kanyut</div>
+      </div>
+    </section>
+    
+    <section id="contact" style="margin-top:2rem">
+      <h2>hitam</h2>
+      <div class="card" style="padding:1rem">
+        <form id="contactForm">
+          <input id="contactName" placeholder="Nama lengkap" required />
+          <input id="contactEmail" placeholder="Email" type="email" required />
+          <textarea id="contactMessage" placeholder="Pesan Anda" rows="5" required></textarea>
+          <button type="submit">pler</button>
+        </form>
+        <p id="contactMsg" style="margin-top:0.75rem;color:green;display:none"></p>
+      </div>
+    </section>
+    
+  </main>
+  <footer>
+    <div class="container">
+      <p>&copy; <span id="year"></span> Retup</p>
+    </div>
+  </footer>
+  <script>
+    // Set tahun otomatis di footer
+    document.getElementById('year').textContent = new Date().getFullYear();
+    
+    // Demo form sederhana (tidak mengirim ke server)
+    document.getElementById('demoForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const msg = document.getElementById('demoMsg');
+      msg.style.display = 'block';
+      msg.textContent = `Terima kasih ${name}! Kami akan mengirim contoh ke ${email} (demo).`;
+      this.reset();
+    });
+    
+    // Contact form fake submit with validation
+    document.getElementById('contactForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const name = document.getElementById('contactName').value.trim();
+      const email = document.getElementById('contactEmail').value.trim();
+      const message = document.getElementById('contactMessage').value.trim();
+      const out = document.getElementById('contactMsg');
+      if (!/.+@.+\..+/.test(email)) { alertalert('email nya salah tol'); return }
+      out.style.display = 'block';
+      out.textContent = ' (brisik). Tol!';
+      this.reset();
+    });
+  </script>
+</body>
+
+</html></script>
