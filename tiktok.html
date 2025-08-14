@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My TikTok Gallery</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #111;
+      color: white;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    h1 {
+      padding: 20px;
+      background: #ff0050;
+      margin: 0;
+    }
+    .gallery {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      padding: 20px;
+    }
+    blockquote {
+      max-width: 300px;
+      min-width: 250px;
+      border-radius: 15px;
+      overflow: hidden;
+    }
+    footer {
+      background: #ff0050;
+      padding: 10px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>My Favorite TikToks</h1>
+
+  <div class="gallery">
+    <!-- TikTok Video 1 -->
+    <blockquote class="tiktok-embed" cite="https://www.tiktok.com/@scout2015/video/6718335390845095173" data-video-id="6718335390845095173"></blockquote>
+
+    <!-- TikTok Video 2 -->
+    <blockquote class="tiktok-embed" cite="https://www.tiktok.com/@tiktok/video/7106592043132202245" data-video-id="7106592043132202245"></blockquote>
+
+    <!-- TikTok Video 3 -->
+    <blockquote class="tiktok-embed" cite="https://www.tiktok.com/@itsjojosiwa/video/7049783943020948738" data-video-id="7049783943020948738"></blockquote>
+  </div>
+
+  <footer>
+    <p>Created by [Your Name] | TikTok Portfolio</p>
+  </footer>
+
+  <script async src="https://www.tiktok.com/embed.js"></script>
+</body>
+</html>
