@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diagnostica Bike - Beta</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f4f8;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    #app {
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+    button {
+      background: #007bff;
+      color: #fff;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin: 8px 0;
+      width: 100%;
+      font-size: 16px;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h1>Diagnostica Bike - Beta</h1>
+    
+    <div id="step1">
+      <p>Inserisci il modello della tua bici o monopattino elettrico:</p>
+      <input type="text" id="modelInput" placeholder="Es. Super Soco, Brera, XP">
+      <button onclick="nextStep(1)">Avanti</button>
+    </div>
+    
+    <div id="step2" class="hidden">
+      <p>Descrivi brevemente il problema riscontrato:</p>
+      <textarea id="problemInput" placeholder="Es. Il display non si accende"></textarea>
+      <button onclick="nextStep(2)">Avanti</button>
+    </div>
+    
+    <div id="step3" class="hidden">
+      <p id="questionText">Domanda 1: Il display si accende?</p>
+      <button onclick="answer(true)">Sì</button>
+      <button onclick="answer(false)">No</button>
+    </div>
+    
+    <div id="result" class="hidden">
+      <h2>Diagnosi finale</h2>
+      <p id="diagnosisText"></p>
+      <button onclick="restart()">Torna all'inizio</button>
+      <button onclick="repeat()">Ripeti la diagnosi</button>
+    </div>
+  </div>
+
+  <script>
+    let step = 1;
+    let answers = [];
+    let questions = [
+      "Il display si accende?",
+      "La batteria è completamente carica?",
+      "Si sente rumore dal motore quando accelera?",
+      "I freni funzionano correttamente?"
+    ];
+
+    function nextStep(currentStep) {
+      if (currentStep === 1 && document.getElementById("modelInput").value.trim() === "") return alert("Inserisci il modello");
+      if (currentStep === 2 && document.getElementById("problemInput").value.trim() === "") return alert("Descrivi il problema");
+      document.getElementById(`step${currentStep}`).classList.add("hidden");
+      document.getElementById(`step${currentStep + 1}`).classList.remove("hidden");
+      step++;
+    }
+
+    function answer(response) {
+      answers.push(response);
+      if (answers.length < questions.length) {
+        document.getElementById("questionText").textContent = "Domanda " + (answers.length + 1) + ": " + questions[answers.length];
+      } else {
+        showResult();
+      }
+    }
+
+    function showResult() {
+      document.getElementById("step3").classList.add("hidden");
+      document.getElementById("result").classList.remove("hidden");
+
+      let diagnosis = "";
+      if (!answers[0]) {
+        diagnosis = "Controlla se il display è collegato correttamente e se la batteria è inserita.";
+      } else if (!answers[1]) {
+        diagnosis = "Ricarica la batteria completamente e riprova.";
+      } else if (!answers[2]) {
+        diagnosis = "Il motore potrebbe avere un guasto. Controlla i collegamenti elettrici.";
+      } else {
+        diagnosis = "Tutto sembra funzionare correttamente. Verifica i freni e i cavi.";
+      }
+
+      document.getElementById("diagnosisText").textContent = diagnosis;
+    }
+
+    function restart() {
+      document.getElementById("result").classList.add("hidden");
+      document.getElementById("step1").classList.remove("hidden");
+      answers = [];
+      step = 1;
+      document.getElementById("modelInput").value = "";
+      document.getElementById("problemInput").value = "";
+    }
+
+    function repeat() {
+      document.getElementById("result").classList.add("hidden");
+      document.getElementById("step3").classList.remove("hidden");
+      answers = [];
+      step = 3;
+      document.getElementById("questionText").textContent = "Domanda 1: " + questions[0];
+    }
+  </script>
+</body>
+</html>
