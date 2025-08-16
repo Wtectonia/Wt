@@ -1,32 +1,20 @@
-# Your New Website 🤩
+const taskInput = document.getElementById('taskInput');
+const addTaskBtn = document.getElementById('addTaskBtn');
+const taskList = document.getElementById('taskList');
 
-Oh hi! Welcome to your new website. 🛼
+addTaskBtn.addEventListener('click', () => {
+  const taskText = taskInput.value.trim();
+  if(taskText === "") return;
 
-With this project you can make a website and preview it in your browser, then deploy it for free – you don't even need a host!
+  const li = document.createElement('li');
+  li.textContent = taskText;
 
-**In this guide we'll learn how to deploy your project to <a href="https://www.fastly.com/products/edge-compute" target="_blank">Fastly Compute</a> – your deployment will automatically handle things like 404 errors, and your beautiful website will immediately be available for everyone, everywhere all at once. 🪄**
+  li.addEventListener('click', () => li.classList.toggle('completed'));
+  li.addEventListener('dblclick', () => li.remove());
 
-> You can alternatively deploy your blog to other platforms, like <a href="https://pages.github.com/" target="_blank">GitHub Pages</a>.
-
-## In this doc
-
-* [Fork your own site](#fork-your-own-site)
-* [Get to know your website](#get-to-know-your-website)
-  * [Share your draft site](#share-your-draft-site)
-* [Deploy your site to Fastly Compute](#deploy-your-site-to-fastly-compute)
-* [Save your edits to GitHub](#save-your-edits-to-github)
-* [How this project works](#how-this-project-works-)
-  * [Extensions](#extensions)
-* [Keep going! 🚀](#keep-going-)
-
-## Fork your own site
-
-**Fork** [this repository](https://github.com/glitchdotcom/website-to-compute/) to create your own copy of the site.
-
-In your fork, open the site in a codespace by clicking **Code** > **Codespaces** and creating a new codespace on your main branch. 
-
-<img alt="Create codespace" src="https://github.com/user-attachments/assets/cb29a8da-d1ac-42f5-962c-7d43b8011324" width="400px"/><br/>
-
+  taskList.appendChild(li);
+  taskInput.value = '';
+});
 Give the codespace a minute or two to start up – it'll automatically build and preview your new website! 
 
 ![this project in a codespace](https://github.com/user-attachments/assets/308941a8-ddbe-48f6-a8f0-c23cc615ed01)
