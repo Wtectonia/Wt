@@ -1,56 +1,114 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="fa">
 <head>
-  <!-- 
-      This is an HTML comment
-      You can write text in a comment and the content won't be visible in the page
-    -->
-
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="icon" href="https://glitch.com/favicon.ico" />
-
-  <!--
-      This is the page head - it contains info the browser uses
-      Like the title, which appears on the browser tab but not inside the page
-      Further down you'll see the content that displays in the page
-    -->
-  <title>Hello World!</title>
-
-  <!-- The website stylesheet -->
-  <link rel="stylesheet" href="/style.css" />
-
-  <!-- The website JavaScript file -->
-  <script src="/script.js" defer></script>
+  <meta charset="UTF-8">
+  <title>Mashhad Search</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+      direction: rtl;
+    }
+    header {
+      background: #4a148c;
+      color: #fff;
+      padding: 20px;
+    }
+    .box {
+      background: #fff;
+      max-width: 400px;
+      margin: 20px auto;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    input, button {
+      padding: 10px;
+      margin: 8px 0;
+      width: 90%;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+    button {
+      background: #4a148c;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #6a1b9a;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      background: #eee;
+      margin: 5px 0;
+      padding: 8px;
+      border-radius: 6px;
+    }
+    .desc {
+      font-size: 13px;
+      color: #444;
+      margin: 15px 0;
+      line-height: 1.7;
+    }
+  </style>
 </head>
-
 <body>
-  <!--
-      The body includes the content you see in the page
-      Each element is defined using tags, like this <div></div>
-      The attributes like class="wrapper" let us style elements in the CSS
-    -->
-  <div class="wrapper">
-    <div class="content" role="main">
-      <h1 class="title">Oh hi website!</h1>
-      <img src="/cool-website.svg" class="illustration" alt="cool website" />
-      <div class="instructions">
-        <p>
-          Fork <a href="https://github.com/glitchdotcom/website-to-compute">this project</a> and open it in a GitHub Codespace.
-        </p>
-        <p> Follow the steps in the README to deploy your new website to Fastly in a few steps!
-        </p>
+  <header>
+    <h1>🔥 Mashhad Search 🔥</h1>
+  </header>
 
-      </div>
+  <div class="box">
+    <p class="desc">
+      توضيحات : اینجا آیدی سوشال مدیاتو وارد کن و کسایی که وارد این سایت شدن رو ببین.  
+      شاید دوستت هم اینجا باشه، یا شاید دنبال کسی که هستی اینجا پیداش کنی. ✨
+    </p>
 
-      <footer class="footer">
-        <div>
-          <a class="remix" href="https://github.com/glitchdotcom/website-to-compute">🚧 Get your own site</a>
-        </div>
-      </footer>
-    </div>
+    <input id="name" type="text" placeholder="👤 نام شما">
+    <input id="id" type="text" placeholder="🔗 آیدی شما (اینستاگرام/تلگرام...)">
+    <button onclick="join()">ورود به لیست</button>
+
+    <hr>
+    <h3>لیست اعضا:</h3>
+    <ul id="list"></ul>
   </div>
-</body>
 
+  <script>
+    const listEl = document.getElementById("list");
+    let users = JSON.parse(localStorage.getItem("users") || "[]");
+
+    function render() {
+      listEl.innerHTML = "";
+      users.forEach(u => {
+        const li = document.createElement("li");
+        li.textContent = u.name + " – " + u.id;
+        listEl.appendChild(li);
+      });
+    }
+
+    function join() {
+      const name = document.getElementById("name").value.trim();
+      const id = document.getElementById("id").value.trim();
+      if (!name || !id) {
+        alert("لطفاً نام و آیدی را وارد کنید");
+        return;
+      }
+      users.push({ name, id });
+      localStorage.setItem("users", JSON.stringify(users));
+      render();
+      document.getElementById("name").value = "";
+      document.getElementById("id").value = "";
+    }
+
+    render();
+  </script>
+</body>
 </html>
