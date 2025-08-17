@@ -1,0 +1,47 @@
+<html>
+  <head>
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="" />
+    <link
+      rel="stylesheet"
+      as="style"
+      onload="this.rel='stylesheet'"
+      href="https://fonts.googleapis.com/css2?display=swap&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900&amp;family=Spline+Sans%3Awght%40400%3B500%3B700"
+    />
+
+    <title>Stitch Design</title>
+    <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64," />
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  </head>
+  <body>
+    <div
+      class="relative flex size-full min-h-screen flex-col bg-white justify-between group/design-root overflow-x-hidden"
+      style='font-family: "Spline Sans", "Noto Sans", sans-serif;'
+    >
+      <div>
+        <div class="@container">
+          <div class="@[480px]:px-4 @[480px]:py-3">
+            <div
+              class="w-full bg-center bg-no-repeat bg-cover flex flex-col justify-end overflow-hidden bg-white @[480px]:rounded-xl min-h-80"
+              style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBcA3miGPH6G5PODx5ywnoi-o1jYJfuo1LAi4TlNE-aiXYpIr4oRNaqLmgwSMTH2ktbVD69BDxQgZVcvHshA9zFBuuTF6X3fVAsErlYPXpg_vFfGvqNOI7tvZQg2A1dqKAm5-NyfBVjeyVIr0WM_sB3XIGTM2_Rn82-f4ow5j0rhhV7NH4fymHp8QFx3sgDjkqUyXkJzXBtAQbRJTuSLcWeB955PXOdn0cafYZU3H_gbu-9H0kTtWL8FZdCEhDNec3W4mTbX0wUD1w");'
+            ></div>
+          </div>
+        </div>
+        <h2 class="text-[#111418] tracking-light text-[28px] font-bold leading-tight px-4 text-center pb-3 pt-5">Design your best work</h2>
+        <p class="text-[#111418] text-base font-normal leading-normal pb-3 pt-1 px-4 text-center">
+          Create stunning presentations, social media posts, and more with our easy-to-use design tools.
+        </p>
+      </div>
+      <div>
+        <div class="flex px-4 py-3">
+          <button
+            class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-12 px-5 flex-1 bg-[#0d80f2] text-white text-base font-bold leading-normal tracking-[0.015em]"
+          >
+            <span class="truncate">Start Creating</span>
+          </button>
+        </div>
+        <div class="h-5 bg-white"></div>
+      </div>
+    </div>
+  </body>
+</html>
