@@ -1,0 +1,235 @@
+import React, { useMemo, useState } from "react"; import { motion, AnimatePresence } from "framer-motion"; import { ShoppingCart, Plus, Minus, CreditCard, QrCode, Settings, Trash2, Store, CheckCircle2, Pencil, Image as ImageIcon, Tag, Upload } from "lucide-react"; import { Card, CardContent } from "@/components/ui/card"; import { Button } from "@/components/ui/button"; import { Input } from "@/components/ui/input"; import { Textarea } from "@/components/ui/textarea"; import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"; import { Label } from "@/components/ui/label"; import { Switch } from "@/components/ui/switch"; import QRCode from "qrcode.react";
+
+// ------------------------------------------------------------ // Loja Personalizável — Single-file demo (client-side) // ------------------------------------------------------------ // ⚠️ Pagamentos reais: este arquivo funciona em MODO DEMO. // Para aceitar PIX e Cartão de Crédito de verdade, conecte um provedor (Stripe, Mercado Pago, Pagar.me, etc.). // Instruções rápidas: // 1) Stripe (suporta PIX e Cartão no Brasil): //    - Crie conta em dashboard.stripe.com -> Ative PIX e Cartão. //    - Crie uma rota /api/checkout no seu backend que gere uma Session do Checkout //      com currency "BRL" e payment_method_types ["card", "pix"]. //    - No botão "Finalizar compra (REAL)", faça um fetch para sua rota e redirecione //      para session.url retornada. // 2) Mercado Pago (Checkout Pro): //    - Crie conta e um "Preference" com itens do carrinho (BRL) e meios PIX + Cartão. //    - Redirecione o usuário para init_point da preferência. // 3) Pagar.me/Cielo/Gerencianet: fluxos parecidos; gere o pagamento no servidor //    e redirecione ou renderize o widget seguro do provedor. // ------------------------------------------------------------
+
+// Tipos type Produto = { id: string; nome: string; preco: number; // em centavos BRL imagem?: string; categoria?: string; personalizavel?: boolean; };
+
+type ItemCarrinho = { produto: Produto; qty: number; custom?: { tipoPersonagem?: "Cachorro" | "Gato" | "Outro"; texto?: string; cor?: string; imagemURL?: string; }; };
+
+// Util: formatar em BRL const brl = (v: number) => (v / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+// Produtos iniciais (exemplos) const PRODUTOS_BASE: Produto[] = [ { id: "p1", nome: "Camiseta Personalizada", preco: 7990, imagem: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?q=80&w=800&auto=format&fit=crop", categoria: "Vestuário", personalizavel: true, }, { id: "p2", nome: "Caneca Personalizada", preco: 4990, imagem: "https://images.unsplash.com/photo-1547316289-14d79c4132d7?q=80&w=800&auto=format&fit=crop", categoria: "Casa & Decoração", personalizavel: true, }, { id: "p3", nome: "Adesivo (kit 10x)", preco: 1990, imagem: "https://images.unsplash.com/photo-1585386959984-a4155223168f?q=80&w=800&auto=format&fit=crop", categoria: "Papéis & Adesivos", personalizavel: true, }, ];
+
+export default function LojaPersonalizavel() { const [produtos, setProdutos] = useState<Produto[]>(PRODUTOS_BASE); const [carrinho, setCarrinho] = useState<ItemCarrinho[]>([]); const [busca, setBusca] = useState(""); const [demoPagamento, setDemoPagamento] = useState(true); const [editando, setEditando] = useState<Produto | null>(null);
+
+const resultados = useMemo(() => { if (!busca) return produtos; const b = busca.toLowerCase(); return produtos.filter((p) => [p.nome, p.categoria].filter(Boolean).join(" ").toLowerCase().includes(b) ); }, [busca, produtos]);
+
+const subtotal = useMemo(() => { return carrinho.reduce((acc, i) => acc + i.produto.preco * i.qty, 0); }, [carrinho]);
+
+const frete = useMemo(() => { return subtotal > 15000 ? 0 : subtotal > 0 ? 1490 : 0; // frete grátis acima de R$150 }, [subtotal]);
+
+const total = subtotal + frete;
+
+function adicionarAoCarrinho(produto: Produto, custom?: ItemCarrinho["custom"]) { setCarrinho((prev) => { const idx = prev.findIndex((i) => i.produto.id === produto.id && JSON.stringify(i.custom) === JSON.stringify(custom)); if (idx >= 0) { const clone = [...prev]; clone[idx] = { ...clone[idx], qty: clone[idx].qty + 1 }; return clone; } return [...prev, { produto, qty: 1, custom }]; }); }
+
+function alterarQtd(prodId: string, delta: number, customKey?: string) { setCarrinho((prev) => { const clone = [...prev]; const idx = clone.findIndex((i) => i.produto.id === prodId && JSON.stringify(i.custom) === (customKey || JSON.stringify(i.custom))); if (idx >= 0) { const novo = { ...clone[idx], qty: Math.max(1, clone[idx].qty + delta) }; clone[idx] = novo; } return clone; }); }
+
+function removerDoCarrinho(index: number) { setCarrinho((prev) => prev.filter((_, i) => i !== index)); }
+
+// Admin: adicionar/editar produto function salvarProduto(p: Partial<Produto>) { // validações básicas if (!p.nome || !p.preco) return alert("Preencha nome e preço."); if (p.preco < 100) return alert("Preço mínimo R$1,00.");
+
+if (editando) {
+  setProdutos((prev) => prev.map((x) => (x.id === editando.id ? { ...editando, ...p } as Produto : x)));
+  setEditando(null);
+} else {
+  const novo: Produto = {
+    id: Math.random().toString(36).slice(2),
+    nome: p.nome!,
+    preco: p.preco!,
+    imagem: p.imagem,
+    categoria: p.categoria,
+    personalizavel: p.personalizavel ?? true,
+  };
+  setProdutos((prev) => [novo, ...prev]);
+}
+
+}
+
+function editarProduto(p: Produto) { setEditando(p); }
+
+function excluirProduto(id: string) { setProdutos((prev) => prev.filter((p) => p.id !== id)); }
+
+return ( <div className="min-h-screen bg-gradient-to-b from-white to-slate-50 text-slate-800"> {/* Topbar */} <header className="sticky top-0 z-30 backdrop-blur bg-white/70 border-b"> <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between"> <div className="flex items-center gap-2"> <Store className="w-6 h-6" /> <span className="font-bold text-lg">Minha Loja Personalizável</span> </div> <div className="flex items-center gap-3"> <div className="hidden sm:block"> <Input placeholder="Buscar produtos..." value={busca} onChange={(e) => setBusca(e.target.value)} className="w-72" /> </div> <CartMini carrinho={carrinho} subtotal={subtotal} frete={frete} total={total} onAlterarQtd={alterarQtd} onRemoverIndex={removerDoCarrinho} demoPagamento={demoPagamento} /> </div> </div> </header>
+
+{/* Hero */}
+  <section className="max-w-6xl mx-auto px-4 py-8 grid md:grid-cols-2 gap-6 items-center">
+    <div>
+      <motion.h1 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="text-3xl md:text-4xl font-extrabold leading-tight">
+        Venda <span className="text-slate-900">qualquer produto</span> com personalização —
+        aceitando <span className="underline decoration-2">PIX</span> e <span className="underline decoration-2">Cartão</span>
+      </motion.h1>
+      <p className="mt-3 text-slate-600">Adicione itens, defina preços em reais, permita que o cliente escolha personagem (Cachorro, Gato ou Outro), cor, texto e imagem. Finalize via PIX (QR) ou Cartão (modo demo ou real, conectando um gateway).</p>
+      <div className="mt-4 flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <Switch checked={demoPagamento} onCheckedChange={setDemoPagamento} id="demo" />
+          <Label htmlFor="demo">Modo Pagamento DEMO</Label>
+        </div>
+        <Settings className="w-5 h-5" />
+      </div>
+    </div>
+    <AdminProdutos onSalvar={salvarProduto} editando={editando} onCancelar={() => setEditando(null)} />
+  </section>
+
+  {/* Lista de produtos */}
+  <section className="max-w-6xl mx-auto px-4 pb-28">
+    <h2 className="text-xl font-bold mb-3">Produtos</h2>
+    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      {resultados.map((p) => (
+        <ProdutoCard key={p.id} p={p} onAdd={adicionarAoCarrinho} onEdit={() => editarProduto(p)} onDelete={() => excluirProduto(p.id)} />
+      ))}
+    </div>
+  </section>
+
+  {/* Footer */}
+  <footer className="fixed bottom-0 left-0 right-0 border-t bg-white/80 backdrop-blur">
+    <div className="max-w-6xl mx-auto px-4 py-3 text-sm text-slate-600 flex items-center justify-between">
+      <span>© {new Date().getFullYear()} Minha Loja — Feito com ❤️</span>
+      <span>Para ativar pagamentos reais, veja comentários no código (Stripe/Mercado Pago).</span>
+    </div>
+  </footer>
+</div>
+
+); }
+
+function ProdutoCard({ p, onAdd, onEdit, onDelete }: { p: Produto; onAdd: (p: Produto, c?: ItemCarrinho["custom"]) => void; onEdit: () => void; onDelete: () => void }) { const [tipoPersonagem, setTipoPersonagem] = useState<"Cachorro" | "Gato" | "Outro">("Cachorro"); const [texto, setTexto] = useState(""); const [cor, setCor] = useState("#000000"); const [imagemURL, setImagemURL] = useState("");
+
+return ( <Card className="rounded-2xl shadow-sm"> <CardContent className="p-4 space-y-3"> <div className="aspect-video w-full bg-slate-100 rounded-xl overflow-hidden flex items-center justify-center"> {p.imagem ? ( <img src={p.imagem} alt={p.nome} className="w-full h-full object-cover"/> ) : ( <div className="text-slate-400 flex flex-col items-center"> <ImageIcon className="w-10 h-10" /> <span>Sem imagem</span> </div> )} </div> <div className="flex items-start justify-between gap-2"> <div> <h3 className="font-bold">{p.nome}</h3> <div className="text-slate-500 text-sm flex items-center gap-2"><Tag className="w-4 h-4" /> {p.categoria || "Geral"}</div> </div> <div className="text-right font-semibold">{brl(p.preco)}</div> </div>
+
+{p.personalizavel && (
+      <div className="grid gap-3">
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label className="text-xs">Personagem</Label>
+            <select className="w-full border rounded-xl px-3 py-2" value={tipoPersonagem} onChange={(e) => setTipoPersonagem(e.target.value as any)}>
+              <option value="Cachorro">Cachorro</option>
+              <option value="Gato">Gato</option>
+              <option value="Outro">Outro</option>
+            </select>
+          </div>
+          <div>
+            <Label className="text-xs">Cor principal</Label>
+            <Input type="color" value={cor} onChange={(e) => setCor(e.target.value)} />
+          </div>
+        </div>
+        <div>
+          <Label className="text-xs">Texto para estampar</Label>
+          <Input placeholder="Ex.: Nome do pet, frase..." value={texto} onChange={(e) => setTexto(e.target.value)} />
+        </div>
+        <div>
+          <Label className="text-xs">Imagem (URL)</Label>
+          <div className="flex gap-2">
+            <Input placeholder="https://..." value={imagemURL} onChange={(e) => setImagemURL(e.target.value)} />
+            <Button variant="outline" onClick={() => window.open(imagemURL || '#', '_blank')}><Upload className="w-4 h-4 mr-1"/>ver</Button>
+          </div>
+          <p className="text-[11px] text-slate-500 mt-1">(Aceite termos de uso de imagem. Para upload direto, conecte um serviço como Uploadcare, Firebase Storage, etc.)</p>
+        </div>
+      </div>
+    )}
+
+    <div className="flex items-center justify-between gap-2 pt-1">
+      <div className="flex gap-2">
+        <Button onClick={() => onAdd(p, p.personalizavel ? { tipoPersonagem, texto, cor, imagemURL } : undefined)} className="rounded-2xl"><Plus className="w-4 h-4 mr-1"/>Adicionar</Button>
+      </div>
+      <div className="flex gap-2">
+        <Button variant="outline" onClick={onEdit}><Pencil className="w-4 h-4 mr-1"/>Editar</Button>
+        <Button variant="destructive" onClick={onDelete}><Trash2 className="w-4 h-4 mr-1"/>Excluir</Button>
+      </div>
+    </div>
+  </CardContent>
+</Card>
+
+); }
+
+function CartMini({ carrinho, subtotal, frete, total, onAlterarQtd, onRemoverIndex, demoPagamento }: { carrinho: ItemCarrinho[]; subtotal: number; frete: number; total: number; onAlterarQtd: (id: string, delta: number, ck?: string) => void; onRemoverIndex: (i: number) => void; demoPagamento: boolean; }) { const [aberto, setAberto] = useState(false); const [tab, setTab] = useState<string>("pix");
+
+return ( <div className="relative"> <Button onClick={() => setAberto((v) => !v)} className="rounded-2xl"> <ShoppingCart className="w-4 h-4 mr-2"/> {carrinho.reduce((a, i) => a + i.qty, 0)} itens — {brl(total)} </Button>
+
+<AnimatePresence>
+    {aberto && (
+      <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} className="absolute right-0 mt-2 w-[92vw] max-w-[480px] bg-white rounded-2xl shadow-xl border p-0 overflow-hidden">
+        <div className="p-4 border-b flex items-center justify-between">
+          <div className="font-bold">Seu carrinho</div>
+          <div className="text-sm text-slate-500">Subtotal {brl(subtotal)}</div>
+        </div>
+
+        <div className="max-h-[50vh] overflow-auto p-2 divide-y">
+          {carrinho.length === 0 && (
+            <div className="p-6 text-center text-slate-500">Seu carrinho está vazio.</div>
+          )}
+          {carrinho.map((ci, idx) => {
+            const ck = JSON.stringify(ci.custom);
+            return (
+              <div key={idx} className="p-3 flex items-start gap-3">
+                <div className="w-12 h-12 rounded-xl bg-slate-100 overflow-hidden flex items-center justify-center">
+                  {ci.produto.imagem ? (
+                    <img src={ci.produto.imagem} className="w-full h-full object-cover"/>
+                  ) : (
+                    <ImageIcon className="w-5 h-5 text-slate-400"/>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium truncate">{ci.produto.nome}</div>
+                  <div className="text-sm text-slate-500">{brl(ci.produto.preco)} • x{ci.qty}</div>
+                  {ci.custom && (
+                    <div className="mt-1 text-xs text-slate-500 space-y-0.5">
+                      <div>Personagem: {ci.custom.tipoPersonagem}</div>
+                      {ci.custom.texto && <div>Texto: “{ci.custom.texto}”</div>}
+                      {ci.custom.imagemURL && <div>Imagem: <a className="underline" href={ci.custom.imagemURL} target="_blank">ver</a></div>}
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button size="icon" variant="outline" onClick={() => onAlterarQtd(ci.produto.id, -1, ck)} className="rounded-full"><Minus className="w-4 h-4"/></Button>
+                  <Button size="icon" variant="outline" onClick={() => onAlterarQtd(ci.produto.id, +1, ck)} className="rounded-full"><Plus className="w-4 h-4"/></Button>
+                  <Button size="icon" variant="ghost" onClick={() => onRemoverIndex(idx)} className="rounded-full"><Trash2 className="w-4 h-4"/></Button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="p-4 border-t">
+          <div className="flex items-center justify-between text-sm">
+            <span>Frete</span>
+            <span>{frete === 0 ? "Grátis" : brl(frete)}</span>
+          </div>
+          <div className="flex items-center justify-between font-semibold text-base mt-1">
+            <span>Total</span>
+            <span>{brl(subtotal + frete)}</span>
+          </div>
+
+          <Tabs value={tab} onValueChange={setTab} className="mt-3">
+            <TabsList className="grid grid-cols-2">
+              <TabsTrigger value="pix"><div className="flex items-center gap-2"><QrCode className="w-4 h-4"/>PIX</div></TabsTrigger>
+              <TabsTrigger value="card"><div className="flex items-center gap-2"><CreditCard className="w-4 h-4"/>Cartão</div></TabsTrigger>
+            </TabsList>
+            <TabsContent value="pix" className="mt-3">
+              <PagamentoPixDemo total={subtotal + frete} demo={demoPagamento} />
+            </TabsContent>
+            <TabsContent value="card" className="mt-3">
+              <PagamentoCartaoDemo total={subtotal + frete} demo={demoPagamento} />
+            </TabsContent>
+          </Tabs>
+        </div>
+      </motion.div>
+    )}
+  </AnimatePresence>
+</div>
+
+); }
+
+function PagamentoPixDemo({ total, demo }: { total: number; demo: boolean }) { const [pago, setPago] = useState(false); const txid = useMemo(() => Math.random().toString(36).slice(2, 10).toUpperCase(), []); const copiaCola = useMemo(() => 00020126830014br.gov.bcb.pix0114+559999999999520400005303986540${(total/100).toFixed(2)}5802BR5920Minha Loja Teste6009Sao Paulo62070503***6304ABCD, [total]);
+
+if (pago) { return ( <div className="flex flex-col items-center text-center gap-2"> <CheckCircle2 className="w-8 h-8"/> <div className="font-semibold">Pagamento confirmado (DEMO)</div> <div className="text-sm text-slate-500">TxID {txid} • {brl(total)}</div> </div> ); }
+
+return ( <div className="grid gap-3"> <div className="text-sm text-slate-600">{demo ? "Modo DEMO ativo: este QR é ilustrativo." : "Produção: substitua por QR do seu provedor."}</div> <div className="flex flex-col items-center"> <QRCode value={copiaCola} size={180} includeMargin /> <div className="text-xs text-slate-500 mt-2">Copia e Cola PIX (DEMO)</div> <Textarea readOnly value={copiaCola} className="mt-2 text-xs h-20"/> </div> <Button className="rounded-2xl" onClick={() => setPago(true)}>Marcar como pago (DEMO)</Button> {!demo && ( <Button variant="outline" className="rounded-2xl" onClick={() => alert("Aqui você chamaria seu backend (Stripe/Mercado Pago) para gerar o QR real.")}>Finalizar compra (REAL)</Button> )} </div> ); }
+
+function PagamentoCartaoDemo({ total, demo }: { total: number; demo: boolean }) { const [nome, setNome] = useState(""); const [numero, setNumero] = useState(""); const [cvv, setCvv] = useState(""); const [validade, setValidade] = useState(""); const [pago, setPago] = useState(false);
+
+if (pago) { return ( <div className="flex flex-col items-center text-center gap-2"> <CheckCircle2 className="w-8 h-8"/> <div className="font-semibold">Pagamento aprovado (DEMO)</div> <div className="text-sm text-slate-500">{brl(total)}</div> </div> ); }
+
+return ( <div className="grid gap-3"> <div className="grid grid-cols-2 gap-3"> <div> <Label className="text-xs">Nome impresso</Label> <Input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Ex.: Maria S. Souza" /> </div> <div> <Label className="text-xs">Validade (MM/AA)</Label> <Input value={validade} onChange={(e) => setValidade(e.target.value)} placeholder="12/29" /> </div> </div> <div className="grid grid-cols-2 gap-3"> <div> <Label className="text-xs">Número do cartão</Label> <Input value={numero} onChange={(e) => setNumero(e.target.value)} placeholder="4111 1111 1111 1111" /> </div> <div> <Label className="text-xs">CVV</Label> <Input value={cvv} onChange={(e) => setCvv(e.target.value)} placeholder="123" /> </div> </div> <Button className="rounded-2xl" onClick={() => { if (!demo) { alert("Produção: chamar backend para criar sessão de pagamento real (Stripe/Mercado Pago). "); return; } if (!nome || !numero || !cvv || !validade) return alert("Preencha todos os campos."); setPago(true); }}>Pagar {brl(total)}</Button> {!demo && ( <Button variant="outline" className="rounded-2xl" onClick={() => alert("Aqui você redirecionaria para o Checkout seguro do provedor.")}>Finalizar compra (REAL)</Button> )} <p className="text-[11px] text-slate-500">Nós não armazenamos dados de cartão. Em produção, use o widget seguro do provedor.</p> </div> ); }
+
+function AdminProdutos({ onSalvar, editando, onCancelar }: { onSalvar: (p: Partial<Produto>) => void; editando: Produto | null; onCancelar: () => void; }) { const [nome, setNome] = useState(editando?.nome || ""); const [preco, setPreco] = useState(editando ? (editando.preco / 100).toFixed(2) : "79,90"); const [imagem, setImagem] = useState(editando?.imagem || ""); const [categoria, setCategoria] = useState(editando?.categoria || ""); const [personalizavel, setPersonalizavel] = useState(editando?.personalizavel ?? true);
+
+React.
