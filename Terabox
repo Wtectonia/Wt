@@ -1,0 +1,35 @@
+from telegram import Update
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
+import requests
+
+BOT_TOKEN = "YOUR_BOT_TOKEN"
+
+def start(update: Update, context: CallbackContext):
+    update.message.reply_text("👋 Send me a TeraBox / TeraShare link!")
+
+def handle_links(update: Update, context: CallbackContext):
+    url = update.message.text.strip()
+    if "terabox.com" in url or "terashare" in url:
+        update.message.reply_text("⏳ Processing your link...")
+        try:
+            api = f"https://teraboxdownloader.com/api?url={url}"
+            r = requests.get(api).json()
+            if "direct_link" in r:
+                update.message.reply_text(f"🎥 {r['direct_link']}")
+            else:
+                update.message.reply_text("❌ Could not fetch video.")
+        except Exception as e:
+            update.message.reply_text(f"⚠️ Error: {e}")
+    else:
+        update.message.reply_text("❌ Not a TeraBox/TeraShare link.")
+
+def main():
+    updater = Updater(BOT_TOKEN, use_context=True)
+    dp = updater.dispatcher
+    dp.add_handler(CommandHandler("start", start))
+    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_links))
+    updater.start_polling()
+    updater.idle()
+
+if __name__ == "__main__":
+    main()
