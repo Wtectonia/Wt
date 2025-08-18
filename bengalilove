@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BengaliLove - Free Dating</title>
+<style>
+body { font-family: Arial, sans-serif; background:#fdf6f6; text-align:center; margin:0; padding:0;}
+header { background:#e60073; color:white; padding:20px; font-size:24px; font-weight:bold;}
+.container { margin:20px auto; padding:20px; width:90%; max-width:400px; background:white; border-radius:12px; box-shadow:0 0 10px rgba(0,0,0,0.1);}
+input, button, textarea { width:100%; padding:10px; margin:8px 0; border-radius:8px; border:1px solid #ddd;}
+button { background:#e60073; color:white; font-weight:bold; cursor:pointer;}
+.chat-box { border:1px solid #ccc; padding:10px; height:200px; overflow-y:auto; margin-bottom:10px; text-align:left;}
+.msg { background:#ffe6f0; margin:5px; padding:8px; border-radius:6px;}
+</style>
+</head>
+<body>
+
+<header>💖 BengaliLove.com 💖<br>Free Bangladeshi Dating</header>
+
+<div class="container" id="auth">
+<h2>সাইন আপ / লগইন</h2>
+<input type="text" id="phone" placeholder="+8801XXXXXXXXX" required>
+<button onclick="login()">প্রবেশ করুন</button>
+<p style="font-size:12px;color:gray;">⚠️ শুধুমাত্র বাংলাদেশি নম্বর গ্রহণযোগ্য</p>
+</div>
+
+<div class="container" id="profile" style="display:none;">
+<h2>প্রোফাইল তৈরি</h2>
+<input type="text" id="name" placeholder="আপনার নাম">
+<input type="number" id="age" placeholder="বয়স">
+<input type="text" id="location" placeholder="লোকেশন (যেমন: ঢাকা)">
+<button onclick="saveProfile()">প্রোফাইল সেভ করুন</button>
+</div>
+
+<div class="container" id="chat" style="display:none;">
+<h2>চ্যাট রুম</h2>
+<div class="chat-box" id="chatBox"></div>
+<textarea id="msg" placeholder="আপনার মেসেজ লিখুন..."></textarea>
+<button onclick="sendMsg()">পাঠান</button>
+</div>
+
+<script>
+let currentUser = null;
+let messages = JSON.parse(localStorage.getItem("messages")||"[]");
+
+function login(){
+  let phone = document.getElementById("phone").value;
+  if(phone.startsWith("+8801") && phone.length===14){
+    currentUser = {phone: phone};
+    localStorage.setItem("currentUser", JSON.stringify(currentUser));
+    document.getElementById("auth").style.display="none";
+    document.getElementById("profile").style.display="block";
+  }else{ alert("শুধুমাত্র +880 দিয়ে শুরু হওয়া বাংলাদেশি নাম্বার দিন!"); }
+}
+
+function saveProfile(){
+  let name = document.getElementById("name").value;
+  let age = document.getElementById("age").value;
+  let loc = document.getElementById("location").value;
+  if(name && age && loc){
+    currentUser.name = name; currentUser.age=age; currentUser.location=loc;
+    localStorage.setItem("currentUser", JSON.stringify(currentUser));
+    document.getElementById("profile").style.display="none";
+    document.getElementById("chat").style.display="block";
+    loadMessages();
+  }else{ alert("সব তথ্য পূরণ করুন"); }
+}
+
+function sendMsg(){
+  let msg = document.getElementById("msg").value;
+  if(msg){
+    messages.push({name: currentUser.name, text: msg});
+    localStorage.setItem("messages", JSON.stringify(messages));
+    document.getElementById("msg").value="";
+    loadMessages();
+  }
+}
+
+function loadMessages(){
+  let chatBox = document.getElementById("chatBox");
+  chatBox.innerHTML="";
+  messages.forEach(m=>{
+    let div = document.createElement("div");
+    div.className="msg";
+    div.innerText = m.name + ": " + m.text;
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  });
+}
+
+loadMessages();
+</script>
+
+</body>
+</html>
