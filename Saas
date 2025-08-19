@@ -1,0 +1,88 @@
+education-saas/
+│
+├── backend/
+│   ├── manage.py
+│   ├── requirements.txt
+│   ├── db.sqlite3
+│   └── saas_app/
+│       ├── models.py
+│       ├── views.py
+│       ├── urls.py
+│       └── serializers.py
+│
+├── frontend/
+│   ├── index.html
+│   ├── package.json
+│   ├── src/
+│   │   ├── App.js
+│   │   ├── components/
+│   │   │   ├── Dashboard.js
+│   │   │   ├── CourseList.js
+│   │   │   └── Assignment.js
+│   │   └── styles.css
+│
+└── README.md
+
+from django.db import models
+
+class Student(models.Model):
+    name = models.CharField(max_length=100)
+    email = models.EmailField(unique=True)
+    enrolled_courses = models.ManyToManyField('Course')
+
+class Teacher(models.Model):
+    name = models.CharField(max_length=100)
+    email = models.EmailField(unique=True)
+
+class Course(models.Model):
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    teacher = models.ForeignKey(Teacher, on_deleteStudentSerializer
+from django.shortcuts import render
+from rest_framework import viewsets
+from .models import Student, Teacher, Course
+from .serializers import StudentSerializer, TeacherSerializer, CourseSerializer
+
+class StudentViewSet(viewsets.ModelViewSet):
+    queryset = Student.objects.all()
+    serializer_class = StudentSerializer
+from rest_framework import serializers
+from .models import Student, Teacher, Course
+
+class StudentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Student
+        fields = '__all__'
+import React from 'react';
+import Dashboard from './components/Dashboard';
+
+function App() {
+  return (
+    <div>
+      <h1>Bangladesh Education SaaS</h1>
+      <Dashboard />
+    </div>
+  );
+}
+import React, { useEffect, useState } from 'react';
+
+function Dashboard() {
+  const [courses, setCourses] = useState([]);
+
+  useEffect(() => {
+    fetch('http://localhost:8000/api/courses/')
+      .then(res => res.json())
+      .then(data => setCourses(data));
+  }, []);
+
+  return (
+    <div>
+      <h2>Courses</h2>
+      <ul>
+        {courses.map(course => <li key={course.id}>{course.title}</li>)}
+      </ul>
+    </div>
+  );
+}
+
+export default Dashboard;
