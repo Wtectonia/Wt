@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uzay Kedisi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1117;
+            color: #e6edf3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            margin: 0;
+            padding: 20px;
+            overflow: hidden;
+            user-select: none;
+            touch-action: none;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 600px;
+            background-color: #161b22;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            padding: 20px;
+        }
+        h1 {
+            color: #58a6ff;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        canvas {
+            border: 2px solid #30363d;
+            border-radius: 8px;
+            background-color: #010409;
+            width: 100%;
+            height: 400px;
+        }
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            background: linear-gradient(180deg, #238636, #2ea043);
+            color: white;
+            border: 1px solid rgba(240, 246, 252, 0.1);
+            border-radius: 6px;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        #messageBox {
+            margin-top: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            min-height: 24px;
+        }
+        #scoreDisplay {
+            margin-top: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #2ea043;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Uzay Kedisi Macerası</h1>
+    <p>Engellere çarpmadan ilerle!</p>
+    <canvas id="gameCanvas"></canvas>
+    <div id="scoreDisplay">Puan: 0</div>
+    <div id="messageBox"></div>
+    <div class="controls">
+        <button id="startButton">Oyunu Başlat</button>
+        <button id="restartButton" style="display:none;">Yeniden Başlat</button>
+    </div>
+</div>
+
+<script>
+    // Canvas ve oyun değişkenleri
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const startButton = document.getElementById('startButton');
+    const restartButton = document.getElementById('restartButton');
+    const messageBox = document.getElementById('messageBox');
+    const scoreDisplay = document.getElementById('scoreDisplay');
+
+    // Oyun durumu değişkenleri
+    let isRunning = false;
+    let animationFrameId;
+    let score = 0;
+    const gameSpeed = 3;
+
+    // Kedi değişkenleri
+    const cat = {
+        x: 50,
+        y: 0,
+        size: 50,
+        velocityY: 0,
+        gravity: 0.5,
+        jumpForce: -10
+    };
+
+    // Yıldız değişkenleri
+    let stars = [];
+    const numStars = 100;
+
+    // Engel değişkenleri
+    let obstacles = [];
+    let obstacleSpawnTimer = 0;
+    const obstacleSpawnInterval = 120; // Her 120 karede bir yeni engel
+
+    // Ses efektleri için Tone.js
+    const synthJump = new Tone.Synth().toDestination();
+    const synthGameOver = new Tone.Synth({
+        oscillator: { type: "sine" },
+        envelope: { attack: 0.05, decay: 0.5, sustain: 0, release: 0.8 }
+    }).toDestination();
+
+    // Oyunu başlatma fonksiyonu
+    function startGame() {
+        if (isRunning) return;
+        isRunning = true;
+        score = 0;
+        updateScoreDisplay();
+        cat.y = canvas.height / 2;
+        cat.velocityY = 0;
+        obstacles = [];
+        messageBox.textContent = '';
+        startButton.style.display = 'none';
+        restartButton.style.display = 'none';
+        createStars();
+        gameLoop();
+    }
+
+    // Oyunu durdurma ve bitirme fonksiyonu
+    function stopGame(isGameOver = false) {
+        isRunning = false;
+        cancelAnimationFrame(animationFrameId);
+        if (isGameOver) {
+            messageBox.textContent = 'Oyun Bitti! Puanınız: ' + score;
+            synthGameOver.triggerAttackRelease("C2", "2n");
+            restartButton.style.display = 'block';
+        } else {
+            messageBox.textContent = 'Oyun Durduruldu';
+            startButton.style.display = 'block';
+            restartButton.style.display = 'none';
+        }
+    }
+
+    // Canvas boyutunu ayarlama
+    function resizeCanvas() {
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+        cat.x = canvas.width * 0.1;
+        cat.y = canvas.height / 2;
+        createStars();
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // Yıldızları oluşturma fonksiyonu
+    function createStars() {
+        stars = [];
+        for (let i = 0; i < numStars; i++) {
+            stars.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: Math.random() * 2 + 1,
+                speed: Math.random() * 0.5 + 0.1
+            });
+        }
+    }
+
+    // Engelleri oluşturma fonksiyonu
+    function createObstacle() {
+        const gapSize = 120; // Engeller arasındaki boşluk boyutu
+        const obstacleWidth = 30;
+        const obstacleHeight = Math.random() * (canvas.height - gapSize * 2) + gapSize;
+        const obstacleGapY = Math.random() * (canvas.height - gapSize - 50) + 25;
+        
+        obstacles.push({
+            x: canvas.width,
+            width: obstacleWidth,
+            topHeight: obstacleGapY,
+            bottomY: obstacleGapY + gapSize,
+            speed: gameSpeed
+        });
+    }
+
+    // Kediyi çizme fonksiyonu
+    function drawCat() {
+        ctx.font = `${cat.size}px serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('🐱', cat.x, cat.y);
+    }
+
+    // Yıldızları çizme fonksiyonu
+    function drawStars() {
+        ctx.fillStyle = '#fff';
+        stars.forEach(star => {
+            ctx.beginPath();
+            ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+            ctx.fill();
+        });
+    }
+
+    // Engelleri çizme fonksiyonu
+    function drawObstacles() {
+        ctx.fillStyle = '#30363d';
+        obstacles.forEach(obs => {
+            // Üst engel
+            ctx.fillRect(obs.x, 0, obs.width, obs.topHeight);
+            // Alt engel
+            ctx.fillRect(obs.x, obs.bottomY, obs.width, canvas.height - obs.bottomY);
+        });
+    }
+
+    // Puanı güncelleme fonksiyonu
+    function updateScoreDisplay() {
+        scoreDisplay.textContent = 'Puan: ' + score;
+    }
+
+    // Çarpışma kontrolü
+    function checkCollision() {
+        for (let obs of obstacles) {
+            // Kedi ve engelin X koordinatları çakışıyor mu?
+            if (cat.x + cat.size / 2 > obs.x && cat.x - cat.size / 2 < obs.x + obs.width) {
+                // Kedi üst engele çarptı mı?
+                if (cat.y - cat.size / 2 < obs.topHeight) {
+                    return true;
+                }
+                // Kedi alt engele çarptı mı?
+                if (cat.y + cat.size / 2 > obs.bottomY) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    // Oyun durumunu güncelleme fonksiyonu
+    function update() {
+        if (!isRunning) return;
+
+        // Kediye yerçekimi uygula
+        cat.velocityY += cat.gravity;
+        cat.y += cat.velocityY;
+
+        // Kedinin ekran dışına çıkmasını engelle (Oyun bitti)
+        if (cat.y > canvas.height - cat.size / 2 || cat.y < cat.size / 2) {
+            stopGame(true);
+            return;
+        }
+
+        // Yıldızları hareket ettir
+        stars.forEach(star => {
+            star.x -= star.speed;
+            if (star.x < 0) {
+                star.x = canvas.width;
+                star.y = Math.random() * canvas.height;
+            }
+        });
+        
+        // Engelleri hareket ettir ve yeni engel oluştur
+        obstacleSpawnTimer++;
+        if (obstacleSpawnTimer >= obstacleSpawnInterval) {
+            createObstacle();
+            obstacleSpawnTimer = 0;
+        }
+        obstacles.forEach(obs => {
+            obs.x -= obs.speed;
+        });
+
+        // Engelleri temizle ve puanı artır
+        obstacles = obstacles.filter(obs => {
+            if (obs.x + obs.width < 0) {
+                score++;
+                updateScoreDisplay();
+                return false;
+            }
+            return true;
+        });
+
+        // Çarpışma kontrolü
+        if (checkCollision()) {
+            stopGame(true);
+        }
+    }
+
+    // Ekrana çizim yapma fonksiyonu
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawStars();
+        drawObstacles();
+        drawCat();
+    }
+
+    // Ana oyun döngüsü
+    function gameLoop() {
+        update();
+        draw();
+        animationFrameId = requestAnimationFrame(gameLoop);
+    }
+
+    // Tıklama veya dokunma olaylarını yönetme
+    function handleInput() {
+        if (isRunning) {
+            cat.velocityY = cat.jumpForce;
+            synthJump.triggerAttackRelease("C4", "8n");
+        }
+    }
+    
+    // Olay dinleyicileri
+    canvas.addEventListener('mousedown', handleInput);
+    canvas.addEventListener('touchstart', handleInput);
+    startButton.addEventListener('click', startGame);
+    restartButton.addEventListener('click', startGame);
+
+    // Uygulamayı ilk kez başlattığımızda durdurulmuş olarak ayarla
+    stopGame();
+
+</script>
+
+</body>
+</html>
