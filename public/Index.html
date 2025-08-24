@@ -1,0 +1,347 @@
+<!DOCTYPE html>                                  <html>                                  
+ <head>                                  
+   <meta charset="UTF-8">                                  
+   <meta name="viewport"                                  
+   content="width=device-width, initial-scale=1.0">                                  
+   <title>THE WORLD</title>                                  
+ </head>                                  
+ <body>                                  
+   <h1>THE WORLD</h1>                                  
+    <nav>                                  
+      <a href="index.html">Home</a>                                  
+      <a href="register.html">Register</a>                                  
+      <a href="login.html">Login</a>                                  
+      <a href="contact.html">Contact</a>                                  
+   </nav>                                  
+   <table>                                  
+      <tr>                                  
+       <th>vegetables</th>                                  
+       <th>clothes</th>                                  
+      </tr>                                  
+      <tr>                                  
+        <td>                                   
+          Cucumber                                   
+          Carrots                                   
+          Bananas                                   
+          Onions                                   
+        </td>                                  
+        <td>                                  
+          Jackets                                   
+          Shirts                                   
+          Shorts                                  
+          Trousers                                   
+       </td>                                  
+    </tr>                                  
+  </table>                                  
+    <div class="slider">                                  
+     <img src=" https://images.unsplash.com/photo-1506744038136-46273834b3fb" class="slide"/>                                  
+     <img src=" https://images.unsplash.com/photo-1521335629791-ce4aec67dd47" class="slide"/>                                  
+     <img src="https://images.unsplash.com/photo-1512436991641-6745cdb1723f" class="slide"/>                                  
+    </div>                                  
+    <details>                                   
+      <summary>Read me</summary>                                  
+      <p>These are old pictures of the late century explaining how hard life hits sometimes but we don't have to give up we always push forward</p>                                  
+    </details>                               
+    <div class="forms-container">                              
+      <form id="registerForm">Register</form>                              
+      <form id="loginForm">Login</form>                              
+      <form id="adminLoginForm">Admin</form>                              
+      <form id="productForm">Product</form>                              
+      <form id="update-profile">Update</form>                              
+    </div>                                 
+    <button class="show-form-btn" onclick="toggleForm()">Register</button>                                  
+    <form id="registerForm" method="POST"                                  
+     action="http://localhost:3000/register"                                  
+     enctype="multipart/form-data">                                  <label for="registerUsername">Username:</label>                                  
+  <input type="text" id="registerUsername"                                  
+  name="username" placeholder="Enter your username" required/><br>                                  
+  <label for="registerEmail">Email:</label>                                  
+  <input type="email" id="registerEmail"                                  
+  name="email" placeholder="Enter your email" required/>                                  
+   <label for="registerPassword">Password:</label>                                  
+   <input type="password" id="registerPassword"                                   
+    name="password" placeholder="Enter your password" required/>                                  
+   <button type="submit">Register</button>                                  
+ <button class="show-form-btn" onclick="toggleForm ()">Login</button>                                  
+  </form>                                  
+  <form id="loginForm" method="POST"                                  
+  action="http://localhost:3000/login"                                  
+  enctype="multipart/form-data">                                  
+   <label for="loginEmail">Email:</label>                                  
+   <input type="email" id="loginEmail"                                  
+   name="email" required/><br>                                  
+   <label for="loginPassword">Password:</label>                                  
+   <input type="password" id="loginPassword"                                  
+   name="password" required/><br>                         
+   <button type="submit">Login</button>                             
+  </form>                                  
+  <button class="show-form-btn" onclick="toggleForm()">Admin</button>                                  
+  <form id="adminLoginForm" method="POST"                                  
+  action="http://localhost:3000/admin/login"                                  
+  enctype="multipart/form-data">                                  
+  <label for="adminEmail">Email:</label>                                  
+  <input type="email" id="adminEmail"                                  
+  name="email" required/><br>                                  
+  <label for="adminPassword">Password:</label>                                  
+   <input type="password" id="adminPassword"                                  
+   name="password" required/><br>                                  
+  <button type="submit">Admin</button>                                  
+</form>                                  
+<button class="show-form-btn" onclick="toggleForm">product</button>                                  
+<form id="productForm" method="POST"                                  
+action="http://localhost:3000/product"                                  
+enctype="multipart/form-data">                                  
+<label for="productName">productName:</label>                                  
+<input type="text" id="productName"                                  
+name="productName" required/>                                  
+<label for="productPrice">productPrice:</label>                                  
+<input type="number" id="productPrice"                                  
+name="productPrice" required/>                  
+ <h2>productList</h2>                  
+     <table>                  
+       <tr>                  
+        <td>price</td>                  
+        <td>name</td>                  
+       </tr>                  
+    </table>                              
+<button type="submit">Product</button>
+
+  </form>                                  
+  <button class="show-form-btn" onclick="toggleForm ()">Update</button>                                  
+  <form id="update-profile" method="POST"                                  
+  action="http://localhost:3000/update/profile"                                  
+  enctype="multipart/form-data">                                  
+  <label for="username">Username:</label>                                  
+  <input type="text" id="username"                                  
+   name="username" placeholder="Update your username"/><br>                                  
+   <label for="Email">Email:</label>                                  
+   <input type="email" id="email"                                  
+    name ="email" placeholder="Update your email "/><br>                                  
+   <label for="password">Password:</label>                                  
+   <input type="password" id="password"                                  
+   name="password" placeholder="Update your password"/><br>                                  
+    <button type="submit">Update</button>                                  
+  </form>                                  
+  <label for="male">Male</label>                                  
+  <Input type="radio" id="male"                                  
+  name="gender" value="male"/>                                  
+  <label for="female">Female:</label>                                  
+  <input type="radio" id="female"                                  
+   name="gender" value="female"/>                                  
+  <textarea id="message" name="message" rows="5" cols="20" placeholder="Write your message"></textarea>                                  
+  </body>                                  
+<style>                                
+    body {                                
+      margin: auto;                                
+      padding: 20px;                                
+      font-family: Arial, sans-serif;                                
+      background-color: white;                                
+      color: black;                                
+      line-height: 100%;                                
+    }                                
+   h1 {                                
+      font-weight: bold;                                
+      text-align: center;                                
+      margin-bottom: 10px;                                
+      color: black;                                
+      font-size: 10px;                                
+    }                                
+   p {                                
+     font-size: 10px;                                
+     color: red;                                
+     margin-bottom: 8px;                                
+   }                                
+  nav {                                
+     display: flex;                                
+     justify-content: space-around;                                
+     gap: 15px;                                
+     margin-bottom: 10px;                                
+   }                                
+  nav a {                                
+    text-decoration: none;                                
+    padding: 20px;                                
+    background-color: pink;                                
+    border-radius: 5px;                                
+    transition: all 0.3s ease;                                
+  }                                
+ nav a:hover {                                
+    background-color: purple;                                
+    color: cyan;                                
+    transform: scale(1.05);                                
+ }                                
+ table {                                
+    width: auto;                                
+    border-collapse: collapse;                                
+    margin-bottom: 10px;                                
+ }                                
+ td,th {                                
+    border: none;                                
+    padding: 5px;                                
+    text-align: center;                                
+ }                                
+ tr:hover {                                
+   background-color: white;                                
+   transform:scale (1.01);                                
+   transition: all 0.2s ease;                                
+ }                                
+ .show-form-btn {                                
+   padding: 15px;                                
+   font-size: 10px;                                
+   background-color: green;                                
+   color: white;                                
+   border: none;                                
+   border-radius: 5px;                                
+   cursor: pointer;                                
+   transition: background 0.3s, transform 0.3s;                                
+ }                                
+ .show-form-btn:hover {                                
+     background-color: white;                                
+     color: black;                                
+     transform:scale (1.05);                                
+  }                                
+ form {                                
+    display: none;                                
+    margin-top: 5px;                                
+    margin-left: 10px;                                
+    margin-right: 10px;                                
+    max-width: 300px;                                
+    border-radius: 5px;                                
+    padding: 10px;                                
+    box-shadow: 2px 2px 3px;                                
+    transition: all 0.3s ease;                                
+    background-color: blue;                                
+ }                                
+ form input, form button {                                
+   width: 100%;                                
+   padding: 20px;                                
+   margin-bottom: 5px;                                
+   border-radius: 5px;                                
+   border: none;                                
+   font-size: 10px;                                
+ }                                
+ form button {                                
+   background-color: blue;                                
+   color: white;                                
+   border: none;                                
+   cursor: pointer;                                
+  }                                
+ form button:hover {                                
+   background-color: white;                                
+   color: violet;                                
+ }                                
+ label {                                
+    display: flex;                                
+    margin-bottom: 10px;                                
+    font-weight: bold;                                
+    color: yellow;                                
+  }                                
+  input {                                
+     width: 70%;                                
+     padding: 10px;                                
+     margin: auto;                                
+     border-radius: 5px;                                
+     border: none;                                
+     font-size: 10px;                                
+   }                                
+   input:focus {                                
+       border-color: green;                                
+       box-shadow: 2px 3px 3px;                                
+       outline: none;                                
+   }                                
+   button {                                
+        background-color: violet;                                
+        color: green;                                
+        font-weight: bold;                                
+        cursor: pointer;                                
+        transition: all 0.3s ease;                                
+        border: none;                                
+   }                                
+   button:hover {                                
+      background-color: orange;                                
+      color: red;                                
+      transform:  scale(1.05);                                
+   }                                
+   .float-img {                                
+      width: 70%;                                
+      display: flex;                                
+      margin: 0;                                
+      animation: float 3s ease-in-out infinite;                                
+    }                                
+   @keyframes float {                                
+      0%, 100% {transform: translateY(0);}                                
+      50% {transform: translateY(-20px); }                                
+     }                                
+    .slideup {                                
+       opacity: 0;                                
+       transform: translateY(50px)                                
+       animation: slideup 0.7s ease forwards;                                
+     }                                
+    @keyframes slideup {                                
+       0% {opacity:0; transform: translateY (50);}                                
+       100% {opacity:1; transform: translateY(0);}                                
+     }                                
+     @media (max-width: 768px) {                                
+           body {                                
+             padding: 20px;                                
+             font-size: 10px;                                
+          }                                
+           form {                                
+              padding: 20px;                                
+             }                                
+           input ,text {                                
+             font-size: 10px;                                
+             padding: 20px;                                
+           }                                
+           nav {                                
+             flex-direction: column;                                
+             gap: 10px;                                
+           }                                
+           table,th,td {                                
+              font-size: 10px;                                
+            }                                
+           .slider {                                
+              overflow: hidden;                                
+              position: absolute;                                
+              height: 100%;                                
+              width: 300px;                                
+            }                                
+           .slide {                                
+               width: 300px;                                
+               display:  none;                                
+               height: auto;                                
+            }                                
+           .slide-active {                                
+               display: block;                                
+             }                                
+         }                                
+   </style>                              
+   <script>                          
+      let currentSlide = 0                          
+      const Slides = document.querySelectorAll('.slide');                          
+      function showSlide(index) {                          
+       slides.forEach((slide) => {                          
+           slide.classList.remove('active');                          
+     }                          
+   });                          function nextSlide() {
+currentSlide = (currentSlide+ 1) % slides.length;
+showSlide(currentSlide);
+}
+showSlide (currentSlide);
+setInterval (nextSlide,3000);
+function toggleForm () {
+const forms = document.getElementById("forms-cotainers")
+if (forms.style.display === 'none'|| forms.style.display === ' ') {
+forms.style.display = 'block';
+} else {
+forms.style.display = 'none';
+}
+}
+const registerForm  = document.getElementById('registerForm');
+registerForm.addEventListener('submit' , async function(event)
+event.preventDefault();
+const username = document.getElementById('registerUsername').value;
+const email = document.getElementById('registerEmail').value;
+const password = document.getElementById('registerPassword').value;
+const data = {username, email, password}
+try {
+const response = await fetch('http
