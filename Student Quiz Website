@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Microsoft Office Quiz</title>
+
+    <style>
+        /* Basic styling for the entire page */
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5;
+            color: #333;
+            text-align: center;
+        }
+
+        /* Container to center the content and give it a clean look */
+        .container {
+            width: 90%;
+            max-width: 700px;
+            margin: 20px auto;
+            background: #fff;
+            padding: 20px 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        h1, h2 {
+            color: #0078d4; /* A shade of blue similar to Microsoft's branding */
+        }
+
+        /* Styles for buttons */
+        .button {
+            display: inline-block;
+            background-color: #0078d4;
+            color: #fff;
+            padding: 12px 25px;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            margin-top: 20px;
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .button:hover {
+            background-color: #005a9e;
+        }
+
+        /* Styles for quiz questions */
+        .question {
+            margin-bottom: 25px;
+            text-align: left;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        
+        .question p {
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        /* Styling for the radio button options */
+        .options label {
+            display: block;
+            background-color: #fff;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        .options label:hover {
+            background-color: #e9e9e9;
+            border-color: #0078d4;
+        }
+
+        /* Hide the default radio buttons */
+        .options input[type="radio"] {
+            display: none;
+        }
+
+        /* Style the label when a radio button is checked (selected) */
+        .options input[type="radio"]:checked + span {
+            font-weight: bold;
+            color: #0078d4;
+        }
+
+        /* Style for the results section */
+        #score-display {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #0078d4;
+            margin-top: 20px;
+        }
+
+        #feedback {
+            font-size: 1.2em;
+            font-style: italic;
+            margin-top: 10px;
+            min-height: 30px; /* Prevents layout shift */
+        }
+
+        /* The 'hidden' class will be added/removed by JavaScript to hide/show sections */
+        .hidden {
+            display: none;
+        }
+
+        /* Responsive design for smaller screens */
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px;
+            }
+            .button {
+                padding: 10px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="quiz-start-page" class="container">
+        <h1>Welcome to the Microsoft Office Quiz!</h1>
+        <p>Test your knowledge of Microsoft Word, Excel, and PowerPoint with these 10 questions. Good luck!</p>
+        <button class="button" onclick="startQuiz()">Start Quiz</button>
+    </div>
+
+    <div id="quiz-page" class="container hidden">
+        <h2>Quiz Questions</h2>
+        <form id="quiz-form">
+            <div class="question">
+                <p>1. What is the keyboard shortcut to copy text in Microsoft Word?</p>
+                <div class="options">
+                    <label><input type="radio" name="q1" value="a"> <span>A) Ctrl + V</span></label>
+                    <label><input type="radio" name="q1" value="b"> <span>B) Ctrl + C</span></label>
+                    <label><input type="radio" name="q1" value="c"> <span>C) Ctrl + X</span></label>
+                    <label><input type="radio" name="q1" value="d"> <span>D) Ctrl + Z</span></label>
+                </div>
+            </div>
+
+            <div class="question">
+                <p>2. In Excel, what is the intersection of a row and a column called?</p>
+                <div class="options">
+                    <label><input type="radio" name="q2" value="a"> <span>A) Field</span></label>
+                    <label><input type="radio" name="q2" value="b"> <span>B) Table</span></label>
+                    <label><input type="radio" name="q2" value="c"> <span>C) Cell</span></label>
+                    <label><input type="radio" name="q2" value="d"> <span>D) Sheet</span></label>
+                </div>
+            </div>
+
+            <div class="question">
+                <p>3. What is a single page in a PowerPoint presentation called?</p>
+                <div class="options">
+                    <label><input type="radio" name="q3" value="a"> <span>A) Document</span></label>
+                    <label><input type="radio" name="q3" value="b"> <span>B) Page</span></label>
+                    <label><input type="radio" name="q3" value="c"> <span>C) Slide</span></label>
+                    <label><input type="radio" name="q3" value="d"> <span>D) Frame</span></label>
+                </div>
+            </div>
+
+            <div class="question">
+                <p>4. Which of these is a valid file extension for a Microsoft Word document?</p>
+                <div class="options">
+                    <label><input type="radio" name="q4" value="a"> <span>A) .pdf</span></label>
+                    <label><input type="radio" name="q4" value="b"> <span>B) .xlsx</span></label>
+                    <label><input type="radio" name="q4" value="c"> <span>C) .pptx</span></label>
+                    <label><input type="radio" name="q4" value="d"> <span>D) .docx</span></label>
+                </div>
+            </div>
+
+            <div class="question">
+                <p>5. Which function is used to add up a range of numbers in Excel?</p>
+                <div class="options">
+                    <label><input type="radio" name="q5" value="a"> <span>A) AVERAGE()</span></label>
+                    <label><input type="radio" name="q5" value="b"> <span>B) COUNT()</span></label>
+                    <label><input type="radio" name="q5" value="c"> <span>C) SUM()</span></label>
+                    <label><input type="radio" name="q5" value="d"> <span>D) ADD()</span></label>
+                </div>
+            </div>
+
+            <div class="question">
+                <p>6. What is the shortcut key to start a slideshow from the current slide?</p>
+                <div class="options">
+                    <label><input type="radio" name="q6" value="a"> <span>A) F1</span></label>
+                    <label><input type="radio" name="q6" value="b"> <span>B) F5</span></label>
+                    <label><input type="radio" name="q6" value="c"> <span>C) Shift + F5</span></label>
+                    <label><input type="radio" name="q6" value="d"> <span>D) Ctrl + S</span></label>
+                </div>
+            </div>
+            
+            <div class="question">
+                <p>7. What does the "Bold" button typically do to selected text in Word?</p>
+                <div class="options">
+                    <label><input type="radio" name="q7" value="a"> <span>A) Makes it italic</span></label>
+                    <label><input type="radio" name="q7" value="b"> <span>B) Makes it bigger</span></label>
+                    <label><input type="radio" name="q7" value="c"> <span>C) Makes it darker and thicker</span></label>
+                    <label><input type="radio" name="q7" value="d"> <span>D) Underlines it</span></label>
+                </div>
+            </div>
+
+            <div class="question">
+                <p>8. How do you format a number as a currency in Excel?</p>
+                <div class="options">
+                    <label><input type="radio" name="q8" value="a"> <span>A) Use the "%" button</span></label>
+                    <label><input type="radio" name="q8" value="b"> <span>B) Use the "Insert" menu</span></label>
+                    <label><input type="radio" name="q8" value="c"> <span>C) Use the "$" button in the Home tab</span></label>
+                    <label><input type="radio" name="q8" value="d"> <span>D) Type the currency symbol manually</span></label>
+                </div>
+            </div>
+            
+            <div class="question">
+                <p>9. What is the term for a pre-made design or layout in PowerPoint?</p>
+                <div class="options">
+                    <label><input type="radio" name="q9" value="a"> <span>A) Template</span></label>
+                    <label><input type="radio" name="q9" value="b"> <span>B) Document Style</span></label>
+                    <label><input type="radio" name="q9" value="c"> <span>C) Slide View</span></label>
+                    <label><input type="radio" name="q9" value="d"> <span>D) Theme</span></label>
+                </div>
+            </div>
+            
+            <div class="question">
+                <p>10. What is the common shortcut to save a file in most Microsoft Office applications?</p>
+                <div class="options">
+                    <label><input type="radio" name="q10" value="a"> <span>A) Ctrl + P</span></label>
+                    <label><input type="radio" name="q10" value="b"> <span>B) Ctrl + Z</span></label>
+                    <label><input type="radio" name="q10" value="c"> <span>C) Ctrl + S</span></label>
+                    <label><input type="radio" name="q10" value="d"> <span>D) Ctrl + A</span></label>
+                </div>
+            </div>
+
+            <button type="submit" class="button">Submit Quiz</button>
+        </form>
+    </div>
+
+    <div id="results-page" class="container hidden">
+        <h2>Your Results</h2>
+        <p id="score-display"></p>
+        <p id="feedback"></p>
+        <button class="button" onclick="restartQuiz()">Try Again</button>
+    </div>
+
+    <script>
+        // Get references to the main sections of the app
+        const startPage = document.getElementById('quiz-start-page');
+        const quizPage = document.getElementById('quiz-page');
+        const resultsPage = document.getElementById('results-page');
+        const quizForm = document.getElementById('quiz-form');
+        const scoreDisplay = document.getElementById('score-display');
+        const feedbackElement = document.getElementById('feedback');
+
+        // This object stores the correct answers for each question.
+        // The key is the question name (e.g., 'q1'), and the value is the correct option (e.g., 'b').
+        const correctAnswers = {
+            q1: 'b', // Ctrl + C
+            q2: 'c', // Cell
+            q3: 'c', // Slide
+            q4: 'd', // .docx
+            q5: 'c', // SUM()
+            q6: 'c', // Shift + F5
+            q7: 'c', // Makes it darker and thicker
+            q8: 'c', // Use the "$" button
+            q9: 'd', // Theme
+            q10: 'c' // Ctrl + S
+        };
+
+        // Function to show the quiz page and hide the others
+        function startQuiz() {
+            startPage.classList.add('hidden');
+            quizPage.classList.remove('hidden');
+        }
+
+        // Add an event listener to the quiz form to handle submission
+        quizForm.addEventListener('submit', (event) => {
+            // Prevent the default form submission (which would refresh the page)
+            event.preventDefault();
+
+            let score = 0;
+            const formData = new FormData(quizForm);
+
+            // Loop through the correct answers to check the user's responses
+            for (const question in correctAnswers) {
+                const userAnswer = formData.get(question);
+                if (userAnswer === correctAnswers[question]) {
+                    score++;
+                }
+            }
+            
+            // Show the results page with the final score
+            displayResults(score);
+        });
+
+        // Function to show the results and update the text
+        function displayResults(score) {
+            quizPage.classList.add('hidden');
+            resultsPage.classList.remove('hidden');
+
+            scoreDisplay.textContent = `You scored ${score} out of 10!`;
+
+            // Provide motivational feedback based on the score
+            let feedbackText;
+            if (score === 10) {
+                feedbackText = "Excellent! You are a Microsoft Office expert!";
+            } else if (score >= 7) {
+                feedbackText = "Great job! You have a strong understanding.";
+            } else if (score >= 4) {
+                feedbackText = "Good effort! Keep practicing to improve.";
+            } else {
+                feedbackText = "Keep trying! Every try is a step forward.";
+            }
+            feedbackElement.textContent = feedbackText;
+        }
+
+        // Function to restart the quiz
+        function restartQuiz() {
+            resultsPage.classList.add('hidden');
+            startPage.classList.remove('hidden');
+            // Reset the form so all radio buttons are unchecked
+            quizForm.reset();
+        }
+    </script>
+
+</body>
+</html>
