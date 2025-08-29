@@ -1,0 +1,185 @@
+import os
+import zipfile
+
+# Re-create files after code state reset
+folder_path = "/mnt/data/ArtoPilot_Glitch_Prompt_Studio"
+os.makedirs(folder_path, exist_ok=True)
+
+# Rebuild index.html
+index_html_content = """<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ArtoPilot Prompt Studio</title>
+  <script defer src="/generator.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-950 text-white min-h-screen font-sans">
+  <section class="text-center py-12 px-4 bg-gradient-to-b from-gray-900 to-gray-800">
+    <h1 class="text-4xl sm:text-6xl font-extrabold leading-tight mb-4">🎬 ArtoPilot Prompt Studio</h1>
+    <p class="text-xl text-gray-300 max-w-2xl mx-auto mb-6">Your all-in-one visual storytelling engine. Instantly create cinematic prompts and Veo 3 JSON scenes for Midjourney, Canva, Gamma, Whisk & more.</p>
+    <a href="#generator" class="inline-block px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white text-lg rounded-full font-semibold transition">✨ Start Creating Prompts</a>
+  </section>
+
+  <section id="generator" class="max-w-5xl mx-auto px-4 py-12">
+    <h2 class="text-2xl font-bold mb-4">🎨 Prompt Builder</h2>
+    <div id="appContainer"></div>
+  </section>
+
+  <section class="max-w-5xl mx-auto px-4 pb-16">
+    <h3 class="text-xl font-semibold mb-2">📤 Export Options</h3>
+    <div class="flex flex-wrap gap-3 mb-3">
+      <button onclick="exportStoryboardPrompts()" class="bg-pink-600 hover:bg-pink-700 px-4 py-2 rounded">🖼️ Export as Prompt</button>
+      <button onclick="exportStoryboardJSON()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded">🎬 Export as JSON</button>
+      <button onclick="copyOutput()" class="bg-gray-700 hover:bg-gray-800 px-4 py-2 rounded">📋 Copy Output</button>
+      <button onclick="downloadOutput()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded">💾 Save as .txt</button>
+    </div>
+    <textarea id="jsonOutput" class="w-full h-64 p-3 rounded text-black" placeholder="Exported prompt or JSON will appear here..."></textarea>
+  </section>
+
+  <script>
+    function copyOutput() {
+      const output = document.getElementById("jsonOutput").value;
+      navigator.clipboard.writeText(output).then(() => alert("📋 Copied to clipboard!"));
+    }
+    function downloadOutput() {
+      const text = document.getElementById("jsonOutput").value;
+      const blob = new Blob([text], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'artopilot_prompt.txt';
+      a.click();
+    }
+  </script>
+</body>
+</html>
+"""
+
+with open(os.path.join(folder_path, "index.html"), "w") as f:
+    f.write(index_html_content)
+
+# Rebuild generator.js
+generator_js_content = """
+const templates = {
+  "Fantasy Hero": {
+    subject: "warrior hero",
+    ethnicity: "elven",
+    hairstyle: "braided long hair",
+    clothing: "enchanted armor",
+    accessories: "glowing amulet",
+    lighting: "moody rimlight",
+    camera: "dramatic upward angle",
+    mood: "epic and powerful",
+    background: "misty battlefield"
+  },
+  "Editorial Fashion": {
+    subject: "fashion model",
+    ethnicity: "Latina",
+    hairstyle: "voluminous curls",
+    clothing: "designer gown",
+    accessories: "rhinestone earrings",
+    lighting: "golden hour softbox",
+    camera: "front-facing studio shot",
+    mood: "luxurious and confident",
+    background: "minimalist dark set"
+  }
+};
+
+let storyboardShots = [];
+
+function generatePrompt(templateName) {
+  const t = templates[templateName];
+  if (!t) return;
+
+  const prompt = `A ${t.ethnicity} ${t.subject} with ${t.hairstyle}, wearing ${t.clothing}, accessorized with ${t.accessories}, in a ${t.background}, lit by ${t.lighting}, captured with ${t.camera}, evoking ${t.mood}.`;
+
+  const shot = {
+    id: "S" + (storyboardShots.length + 1),
+    start: storyboardShots.length * 3.2,
+    end: (storyboardShots.length + 1) * 3.2,
+    prompt: prompt,
+    negativePrompt: "",
+    camera: {
+      lens: "35mm",
+      fov: 60,
+      movement: "slow dolly-in",
+      stabilization: "steady",
+      focus: "face",
+      aperture: 2.8
+    },
+    composition: {
+      framing: "medium close-up",
+      subject: `${t.ethnicity} ${t.subject}`,
+      lookDirection: "camera-left",
+      ruleOfThirds: true
+    },
+    lighting: {
+      setup: t.lighting,
+      key: "soft warm",
+      fill: "subtle",
+      rim: "gentle",
+      colorTemp: 5600
+    },
+    environment: {
+      location: t.background,
+      weather: "neutral",
+      props: []
+    },
+    action: {
+      beats: ["pose shift", "expression change", "breathing motion"]
+    },
+    artDirection: {
+      colorGrade: "amber-teal cinematic",
+      texture: "fine film grain",
+      references: ["cinematic portrait", "editorial lighting"]
+    },
+    audio: {
+      fx: ["ambient atmosphere"],
+      musicCue: "subtle underscore"
+    },
+    transitionOut: {
+      type: "match cut",
+      toShot: "S" + (storyboardShots.length + 2),
+      duration: 0.32
+    }
+  };
+
+  storyboardShots.push(shot);
+  document.getElementById("jsonOutput").value = prompt;
+  alert("✨ Prompt generated!");
+}
+
+function exportStoryboardPrompts() {
+  const lines = storyboardShots.map(s => `🎬 ${s.id}: ${s.prompt}`);
+  document.getElementById("jsonOutput").value = lines.join("\\n\\n");
+}
+
+function exportStoryboardJSON() {
+  const json = {
+    version: "1.0",
+    engine: "veo-3-flow",
+    fps: 24,
+    durationSec: storyboardShots.length * 3.2,
+    resolution: "1920x1080",
+    stylePreset: "cinematic-natural",
+    seed: null,
+    shots: storyboardShots
+  };
+  document.getElementById("jsonOutput").value = JSON.stringify(json, null, 2);
+}
+"""
+
+with open(os.path.join(folder_path, "generator.js"), "w") as f:
+    f.write(generator_js_content)
+
+# Zip the folder
+zip_path = "/mnt/data/Glitch_Ready_ArtoPilot_Prompt_Studio.zip"
+with zipfile.ZipFile(zip_path, 'w') as zipf:
+    for root, _, files in os.walk(folder_path):
+        for file in files:
+            filepath = os.path.join(root, file)
+            arcname = os.path.relpath(filepath, folder_path)
+            zipf.write(filepath, arcname)
+
+zip_path
