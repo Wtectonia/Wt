@@ -1,0 +1,52 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bloks Fawakh 3D</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="ui">
+    <h3>⚔️ Bloks Fawakh 3D</h3>
+    <p>استخدم WASD أو الأسهم للتحرك</p>
+    <p>Space للقفز</p>
+    <p>اضغط الشاشة على الموبايل للتحكم</p>
+  </div>
+  <canvas id="gameCanvas"></canvas>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.155.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.155.0/examples/js/controls/PointerLockControls.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>body, html { margin: 0; padding: 0; overflow: hidden; background: #87CEEB; font-family: sans-serif; }
+
+canvas { display: block; }
+
+#ui { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.5); color: white; padding: 10px; border-radius: 10px; z-index: 100; }
+
+// إعداد المشهد والكاميرا const scene = new THREE.Scene(); scene.background = new THREE.Color('#87CEEB');
+
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+
+const renderer = new THREE.WebGLRenderer({canvas: document.getElementById('gameCanvas')}); renderer.setSize(window.innerWidth, window.innerHeight);
+
+// أرضية/محيط const oceanGeo = new THREE.PlaneGeometry(500, 500); const oceanMat = new THREE.MeshPhongMaterial({color:'#1E90FF'}); const ocean = new THREE.Mesh(oceanGeo, oceanMat); ocean.rotation.x = -Math.PI/2; scene.add(ocean);
+
+// إضاءة const light = new THREE.DirectionalLight(0xffffff, 1); light.position.set(10,20,10); scene.add(light); scene.add(new THREE.AmbientLight(0x404040));
+
+// جزر function createIsland(x,z){ const geo = new THREE.CylinderGeometry(5,8,3,32); const mat = new THREE.MeshPhongMaterial({color:'#228B22'}); const island = new THREE.Mesh(geo,mat); island.position.set(x,1.5,z); scene.add(island); } createIsland(0,0); createIsland(30,40); createIsland(-40,20); createIsland(50,-30);
+
+// لاعب (مكعب) const playerGeo = new THREE.BoxGeometry(1,2,1); const playerMat = new THREE.MeshPhongMaterial({color:'red'}); const player = new THREE.Mesh(playerGeo,playerMat); player.position.y = 1; scene.add(player);
+
+// تحكمات const controls = new THREE.PointerLockControls(camera, document.body); document.body.addEventListener('click', ()=>controls.lock()); scene.add(controls.getObject()); controls.getObject().position.set(0,2,5);
+
+// حركة const keys = {}; document.addEventListener('keydown', (e)=> keys[e.code]=true); document.addEventListener('keyup', (e)=> keys[e.code]=false); let velocity = new THREE.Vector3(); const speed = 0.1;
+
+function animate(){ requestAnimationFrame(animate); velocity.x = 0; velocity.z = 0; if(keys['KeyW']||keys['ArrowUp']) velocity.z = -speed; if(keys['KeyS']||keys['ArrowDown']) velocity.z = speed; if(keys['KeyA']||keys['ArrowLeft']) velocity.x = -speed; if(keys['KeyD']||keys['ArrowRight']) velocity.x = speed; controls.moveRight(velocity.x); controls.moveForward(velocity.z); renderer.render(scene, camera); } animate();
+
+// تحديث حجم النافذة window.addEventListener('resize', ()=>{ camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
+
+أيقونة بسيطة، اسميها player.png، ضعها داخل assets/icons/ضعها داخل assets/icons/sword.pngضعها داخل assets/icons/fruit.pngconst swordSound = new Audio('assets/audio/attack.wav');
+const jumpSound = new Audio('assets/audio/jump.wav');
+const bgm = new Audio('assets/audio/bgm.mp3');
+bgm.loop = true;
+bgm.play();
