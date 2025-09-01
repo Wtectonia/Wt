@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mes boutons interactifs</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 50px;
+    }
+    button {
+      margin: 10px;
+      padding: 15px 30px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Bienvenue sur mon site interactif 👋</h1>
+
+  <!-- Bouton 1 : pop-up message -->
+  <button onclick="alert('Bravo ! Tu as cliqué sur le bouton 🎉')">
+    Clique ici pour un message
+  </button>
+
+  <!-- Bouton 2 : change la couleur de fond -->
+  <button onclick="changerCouleur()">
+    Clique ici pour changer la couleur
+  </button>
+
+  <!-- Bouton 3 : affiche un message sur la page -->
+  <button onclick="afficherTexte()">
+    Clique ici pour afficher un texte
+  </button>
+
+  <!-- Bouton 4 : message de bonne journée -->
+  <button onclick="bonneJournee()">
+    Clique ici pour une bonne journée
+  </button>
+
+  <p id="zoneTexte" style="margin-top:20px; font-size:18px; color:blue;"></p>
+
+  <script>
+    // Bouton 2 : changer la couleur
+    function changerCouleur() {
+      const couleurs = ['#FFCCCC', '#CCFFCC', '#CCCCFF', '#FFFFCC', '#FFCCFF'];
+      const couleur = couleurs[Math.floor(Math.random() * couleurs.length)];
+      document.body.style.backgroundColor = couleur;
+    }
+
+    // Bouton 3 : afficher un texte sur la page
+    function afficherTexte() {
+      document.getElementById('zoneTexte').innerText = "Tu as cliqué sur le bouton ! 🎉";
+    }
+
+    // Bouton 4 : afficher un message de bonne journée
+    function bonneJournee() {
+      alert("Bonne journée ! ☀️ Que ta journée soit pleine de succès et de joie !");
+    }
+  </script>
+</body>
+</html>
