@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+  <title>نبرد با تایتان عظیم</title>
+  <style>
+    body,html {margin:0;padding:0;background:#111;overflow:hidden;font-family:sans-serif;user-select:none;touch-action:none;}
+    #scene {position:absolute;top:0;left:0;width:100%;height:100%;display:block;}
+    .overlay {position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;}
+    .hud {position:absolute;top:10px;left:10px;color:#fff;font-size:18px;background:rgba(0,0,0,0.4);padding:6px 12px;border-radius:10px;pointer-events:auto;}
+    .dialogue {position:absolute;bottom:15%;left:50%;transform:translateX(-50%);width:80%;padding:12px;background:rgba(0,0,0,0.6);color:#fff;font-size:16px;border-radius:12px;display:none;text-align:center;pointer-events:auto;}
+    /* HP Bar باس */
+    .boss-hp {position:absolute;top:10px;right:10px;width:200px;height:20px;background:#400;border:2px solid #fff;border-radius:10px;overflow:hidden;}
+    .boss-hp-inner {height:100%;background:red;width:100%;}
+    /* کنترل‌ها */
+    .controls {position:absolute;bottom:20px;left:20px;pointer-events:auto;}
+    .btn {width:60px;height:60px;margin:5px;border-radius:50%;background:rgba(0,0,0,0.5);color:#fff;border:none;font-size:20px;}
+    .joystick {width:120px;height:120px;border-radius:50%;background:rgba(0,0,0,0.3);position:relative;display:inline-block;}
+    .stick {width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,0.6);position:absolute;top:30px;left:30px;transition:0.05s;}
+    .actions {position:absolute;bottom:20px;right:20px;pointer-events:auto;}
+    .actions button {display:block;}
+    /* لرزش */
+    .shake {animation: shake 0.3s;}
+    @keyframes shake {
+      0%{transform:translate(0,0);}25%{transform:translate(-10px,5px);}50%{transform:translate(10px,-5px);}75%{transform:translate(-5px,10px);}100%{transform:translate(0,0);}
+    }
+  </style>
+</head>
+<body>
+  <canvas id="scene"></canvas>
+  <div class="overlay">
+    <div class="hud" id="score">امتیاز: 0</div>
+    <div class="dialogue" id="dialogueBox">🔥 فصل نهایی: نبرد با تایتان عظیم</div>
+    <div class="boss-hp"><div class="boss-hp-inner" id="bossHpBar"></div></div>
+    <div class="controls">
+      <div class="joystick" id="joystick"><div class="stick" id="stick"></div></div>
+    </div>
+    <div class="actions">
+      <button class="btn" id="jump">⤒</button>
+      <button class="btn" id="attack">⚔️</button>
+      <button class="btn" id="hookL">↢</button>
+      <button class="btn" id="hookR">↣</button>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const canvas=document.getElementById("scene");const ctx=canvas.getContext("2d");
+  let W,H;function resize(){W=canvas.width=innerWidth;H=canvas.height=innerHeight;}resize();window.addEventListener("resize",resize);
+
+  let player={x:100,y:H-120,w:40,h:60,vy:0,onGround:false,dir:1};
+  let score=0;
+  let keys={left:false,right:false};
+  let dialogueBox=document.getElementById("dialogueBox");
+  let boss={x:W-300,y:H-250,w:200,h:200,hp:30,maxHp:30,attackTimer:0};
+
+  function showDialogue(txt){dialogueBox.innerText=txt;dialogueBox.style.display="block";setTimeout(()=>{dialogueBox.style.display="none";},4000);}
+
+  // 🎮 جوی‌استیک
+  const joystick=document.getElementById("joystick");const stick=document.getElementById("stick");
+  let joyActive=false,joyCenter={x:0,y:0};
+  joystick.addEventListener("touchstart",e=>{joyActive=true;joyCenter={x:e.touches[0].clientX,y:e.touches[0].clientY};});
+  joystick.addEventListener("touchmove",e=>{
+    if(!joyActive) return;
+    let dx=e.touches[0].clientX-joyCenter.x;
+    if(dx<-20){keys.left=true;keys.right=false;}
+    else if(dx>20){keys.right=true;keys.left=false;}
+    else {keys.left=keys.right=false;}
+    stick.style.transform=`translate(${Math.max(-30,Math.min(30,dx))}px,0)`;
+  });
+  joystick.addEventListener("touchend",()=>{keys.left=keys.right=false;joyActive=false;stick.style.transform="translate(0,0)";});
+
+  // ⚔️ دکمه‌ها
+  document.getElementById("jump").addEventListener("touchstart",()=>{if(player.onGround){player.vy=-15;player.onGround=false;}});
+  document.getElementById("attack").addEventListener("touchstart",()=>{
+    if(Math.abs(boss.x-player.x)<150 && Math.abs(boss.y-player.y)<150 && boss.hp>0){
+      boss.hp-=2;score+=5;
+      document.getElementById("bossHpBar").style.width=(boss.hp/boss.maxHp*100)+"%";
+      if(boss.hp<=0){showDialogue("🎉 پیروزی! تایتان عظیم نابود شد.");}
+    }
+  });
+  document.getElementById("hookL").addEventListener("touchstart",()=>{player.x-=60;});
+  document.getElementById("hookR").addEventListener("touchstart",()=>{player.x+=60;});
+
+  // 🎬 حلقه بازی
+  function loop(){
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle="#99d";ctx.fillRect(0,0,W,H); // آسمان
+    ctx.fillStyle="#070";ctx.fillRect(0,H-50,W,50); // زمین
+
+    // بازیکن
+    if(keys.left) player.x-=5,player.dir=-1;
+    if(keys.right) player.x+=5,player.dir=1;
+    player.vy+=0.8;player.y+=player.vy;
+    if(player.y+player.h>H-50){player.y=H-50-player.h;player.vy=0;player.onGround=true;}
+    ctx.fillStyle="#fff";ctx.fillText("🧑‍🚀",player.x,player.y);
+
+    // باس
+    if(boss.hp>0){
+      ctx.font="30px serif";
+      ctx.fillText("👹",boss.x+70,boss.y+60);
+      boss.attackTimer++;
+      if(boss.attackTimer>150){
+        boss.attackTimer=0;
+        // حمله باس: کوبیدن زمین
+        document.body.classList.add("shake");
+        setTimeout(()=>{document.body.classList.remove("shake");},300);
+        if(Math.abs(player.x-boss.x)<200){score=Math.max(0,score-10);showDialogue("⚡ ضربه کوبنده!");}
+      }
+    }
+    document.getElementById("score").innerText="امتیاز: "+score;
+    requestAnimationFrame(loop);
+  }
+  loop();
+})();
+</script>
+</body>
+</html>
