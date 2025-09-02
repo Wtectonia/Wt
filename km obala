@@ -1,0 +1,622 @@
+import React, { useEffect, useState } from "react";
+
+/*
+  e‑DeKS — DEMO PRENOVA (single‑file SPA brez zunanjih odvisnosti)
+  ---------------------------------------------------------------
+  • Zemljevidi: samo FOTOGRAFIJE (placeholderji) — za prezentacijo.
+  • Portali z demo geslom 1234 (občina, ministrstvo, moderator) — za demo.
+  • Brez TypeScript tipov, brez zunanjih paketov, varna raba window/localStorage.
+  • Popolnoma na novo: preprost hash‑router, ErrorBoundary, nič belih zaslonov.
+*/
+
+// ------------------------------
+// Globalni stil (inline CSS)
+// ------------------------------
+const css = `
+:root{--primary:#059669;--text:#0f172a}
+*{box-sizing:border-box}
+html,body,#root{height:100%}
+body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif;color:var(--text);background:#f8fafc}
+.container{max-width:1200px;margin:0 auto;padding:0 16px}
+.btn{appearance:none;border:1px solid #e5e7eb;background:white;border-radius:12px;padding:10px 14px;cursor:pointer}
+.btn-primary{background:var(--primary);border-color:var(--primary);color:white}
+.btn-ghost{background:transparent}
+.card{background:white;border:1px solid #e5e7eb;border-radius:16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.grid{display:grid;gap:16px}
+.badge{display:inline-block;border-radius:999px;padding:4px 10px;font-size:12px}
+.badge-ok{background:#d1fae5;color:#065f46}
+.badge-pending{background:#fef3c7;color:#7c2d12}
+.badge-err{background:#fee2e2;color:#7f1d1d}
+header{position:sticky;top:0;background:rgba(255,255,255,.92);backdrop-filter:saturate(180%) blur(8px);border-bottom:1px solid #e5e7eb;z-index:40}
+nav a{padding:10px 12px;border-radius:10px;text-decoration:none;color:#0f172a}
+nav a.active, nav a:hover{background:#f1f5f9}
+.hero{background:linear-gradient(135deg,#ecfdf5,#e0f2fe)}
+.hero-illustration{border-radius:16px;border:1px solid #e5e7eb;background:white;padding:8px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.footer{border-top:1px solid #e5e7eb;background:#f8fafc;color:#475569}
+.placeholder{display:grid;place-items:center;background:repeating-linear-gradient(45deg,#f1f5f9,#f1f5f9 10px,#eef2ff 10px,#eef2ff 20px);color:#475569}
+input,select,textarea{width:100%;border:1px solid #e5e7eb;border-radius:12px;padding:10px 12px}
+label{font-size:14px;font-weight:600}
+form .row{display:grid;gap:12px}
+@media(min-width:900px){
+  .grid-2{grid-template-columns:1.3fr .9fr}
+  .grid-3{grid-template-columns:repeat(3,1fr)}
+}
+`;
+
+// --------------------------------------
+// ErrorBoundary — da nikoli ne ostane bel zaslon
+// --------------------------------------
+class ErrorBoundary extends React.Component {
+  constructor(props){super(props); this.state={hasError:false,error:null}}
+  static getDerivedStateFromError(error){return {hasError:true,error}}
+  componentDidCatch(error,info){console.error("Napaka ujeta v ErrorBoundary:", error, info)}
+  render(){
+    if(this.state.hasError){
+      return (
+        <div className="container" style={{padding:"24px"}}>
+          <div className="card" style={{padding:16}}>
+            <h2>Prišlo je do napake v prikazu</h2>
+            <p>Poskusite osvežiti stran ali se vrnite na <a href="#domov">Domov</a>.</p>
+            <pre style={{whiteSpace:'pre-wrap',fontSize:12,color:'#475569'}}>{String(this.state.error)}</pre>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// ------------------------------
+// Pomožne util funkcije
+// ------------------------------
+function safeHash(){
+  if (typeof window === 'undefined') return '#domov';
+  return window.location.hash || '#domov';
+}
+function onHashChange(cb){
+  if (typeof window === 'undefined') return ()=>{};
+  window.addEventListener('hashchange', cb);
+  return ()=> window.removeEventListener('hashchange', cb);
+}
+function safeLocalGet(k, fallback=null){ try{ return typeof localStorage!=='undefined'? localStorage.getItem(k):fallback }catch{ return fallback } }
+function safeLocalSet(k,v){ try{ if(typeof localStorage!=='undefined') localStorage.setItem(k,v) }catch{} }
+
+// ------------------------------
+// Navigacijski zavihki (brez sklicev na komponente)
+// ------------------------------
+const TABS = [
+  {hash:'#domov', label:'Domov'},
+  {hash:'#zemljevid', label:'Zemljevid'},
+  {hash:'#obcani', label:'Za občane'},
+  {hash:'#turisti', label:'Za turiste'},
+  {hash:'#obcine', label:'Za občine'},
+  {hash:'#odlocevalci', label:'Za odločevalce'},
+  {hash:'#clanstvo', label:'Članstvo'},
+  {hash:'#kontakt', label:'Kontakt'},
+  {hash:'#portal-obcina', label:'Portal občine'},
+  {hash:'#portal-ministrstvo', label:'Portal ministrstva'},
+  {hash:'#portal-moderator', label:'Portal moderatorja'},
+];
+
+function useHashRoute(){
+  const [hash,setHash] = useState(safeHash());
+  useEffect(()=>{
+    const h = ()=> setHash(safeHash());
+    return onHashChange(h);
+  },[]);
+  return hash;
+}
+
+// ------------------------------
+// Demo podatki
+// ------------------------------
+const demoStations = [
+  { id:'lj-kongresni', name:'Polnilno-servisna postaja — Kongresni trg', municipality:'Ljubljana', status:'OK' },
+  { id:'kp-titov', name:'Polnilno-servisna postaja — Titov trg', municipality:'Koper', status:'V PREGLEDU' },
+  { id:'bo-bled', name:'Postaja — Bled center', municipality:'Bled', status:'OKVARJENO' },
+];
+
+// ------------------------------
+// Skupne komponente
+// ------------------------------
+function ImgFallback({src, alt, height=320}){
+  const [ok,setOk] = useState(true);
+  return ok
+    ? <img src={src} alt={alt} style={{width:'100%',height,objectFit:'cover',borderRadius:12}} onError={()=>setOk(false)}/>
+    : <div className="placeholder" style={{width:'100%',height,borderRadius:12}}>{alt} — vstavite fotografijo</div>;
+}
+function Badge({status}){
+  const cls = status==='OK' ? 'badge badge-ok' : status==='OKVARJENO' ? 'badge badge-err' : 'badge badge-pending';
+  return <span className={cls}>{status}</span>;
+}
+function KPI({label,value}){
+  return (
+    <div className="card" style={{padding:16,textAlign:'center'}}>
+      <div style={{fontSize:28,fontWeight:800}}>{value}</div>
+      <div style={{fontSize:12,color:'#64748b'}}>{label}</div>
+    </div>
+  );
+}
+
+function Header(){
+  const hash = useHashRoute();
+  return (
+    <header>
+      <div className="container" style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 16px'}}>
+        <a href="#domov" style={{display:'flex',alignItems:'center',gap:12,textDecoration:'none',color:'inherit'}}>
+          <img src="/assets/logo-e-deks.png" alt="Logotip društva" style={{height:36,width:36,borderRadius:12,border:'1px solid #e5e7eb',objectFit:'contain'}} onError={e=>{e.currentTarget.style.display='none'}}/>
+          <strong>DRUŠTVO E‑KOLESARJEV SLOVENIJE</strong>
+        </a>
+        <nav style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+          {TABS.map(t => (
+            <a key={t.hash} href={t.hash} className={hash===t.hash? 'active':''}>{t.label}</a>
+          ))}
+        </nav>
+      </div>
+    </header>
+  );
+}
+
+function Footer(){
+  return (
+    <footer className="footer">
+      <div className="container" style={{padding:'24px 16px',textAlign:'center',fontSize:14}}>
+        © 2025 e‑DeKS — Društvo e‑kolesarjev Slovenije · www.e-deks.si
+      </div>
+    </footer>
+  );
+}
+
+// ------------------------------
+// Strani
+// ------------------------------
+function Home(){
+  return (
+    <main>
+      <section className="hero">
+        <div className="container" style={{padding:'48px 0'}}>
+          <div className="grid grid-2">
+            <div style={{display:'grid',gap:12,alignContent:'start'}}>
+              <div style={{display:'flex',alignItems:'center',gap:12}}>
+                <img src="/assets/logo-e-deks.png" alt="Logotip društva" style={{height:48,width:48,borderRadius:14,border:'1px solid #e5e7eb',objectFit:'contain'}} onError={e=>{e.currentTarget.style.display='none'}}/>
+                <div style={{fontWeight:700,fontSize:18}}>DRUŠTVO E‑KOLESARJEV SLOVENIJE</div>
+              </div>
+              <p style={{fontSize:18,lineHeight:1.5}}>
+                Predstavljamo Društvo e‑kolesarjev Slovenije s prizadevanjem za najboljše pogoje uporabe električnih koles,
+                usposabljanje za varno vožnjo ter promocijo kolesarstva kot dela sodobne trajnostne mobilnosti.
+              </p>
+              <p style={{fontSize:18,lineHeight:1.5}}>
+                Osnovno poslanstvo društva je vzpostavljanje mreže polnilnih postaj električnih koles izven sistema izposoje in
+                postavitev spletnega zemljevida polnilnih postaj Slovenije v sodelovanju s partnerji. Poslanstvo društva je
+                usmerjeno v vzpostavitev osnovne infrastrukture: polnilne postaje in kolesarnice za vse kolesarje.
+              </p>
+              <div style={{display:'flex',gap:10,flexWrap:'wrap',marginTop:8}}>
+                <a className="btn btn-primary" href="#zemljevid">Zemljevid postaj</a>
+                <a className="btn" href="#obcine">Za občine</a>
+                <a className="btn" href="#odlocevalci">Za odločevalce</a>
+              </div>
+            </div>
+            <div className="hero-illustration">
+              <ImgFallback src="/assets/map-slovenia.jpg" alt="Predogled zemljevida Slovenije" height={360}/>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div className="container" style={{padding:'28px 0'}}>
+          <div className="grid grid-3">
+            <div className="card" style={{padding:16}}>
+              <h3>Za občine</h3>
+              <p>Standard postavitve (polnilnice + fix‑it), vzorci razpisov, vzdrževalni dogovori in pregledni kazalniki uspeha.</p>
+            </div>
+            <div className="card" style={{padding:16}}>
+              <h3>Zemljevid & prijave</h3>
+              <p>Javna evidenca postaj, hitro dodajanje novih točk in prijava okvar s fotografijo ter moderacijo.</p>
+            </div>
+            <div className="card" style={{padding:16}}>
+              <h3>Za odločevalce</h3>
+              <p>Smernice in priporočila za vlaganja v kolesarsko infrastrukturo ter nacionalni pregled stanja.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div className="container" style={{padding:'0 0 36px'}}>
+          <div className="grid grid-4" style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16}}>
+            <KPI label="Postaj (demo)" value="3"/>
+            <KPI label="Delujoče" value="2"/>
+            <KPI label="Okvarjene" value="1"/>
+            <KPI label="Cilj 2026" value="212"/>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}
+
+function MapPage(){
+  return (
+    <main className="container" style={{padding:'24px 0'}}>
+      <h1>Zemljevid postaj</h1>
+      <div className="grid grid-2" style={{alignItems:'start'}}>
+        <div className="card" style={{padding:12}}>
+          <ImgFallback src="/assets/map-ljubljana.jpg" alt="Fotografija zemljevida (Ljubljana)" height={480}/>
+          <div style={{fontSize:12,color:'#64748b',marginTop:8}}>Za predstavitev: zemljevid je trenutno fotografija. V produkciji bo interaktiven.</div>
+        </div>
+        <div className="grid" style={{gap:12}}>
+          <div className="card" style={{padding:16}}>
+            <h3>Seznam postaj (demo)</h3>
+            <ul style={{listStyle:'none',padding:0,margin:0}}>
+              {demoStations.map(s => (
+                <li key={s.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'10px 0',borderBottom:'1px solid #f1f5f9'}}>
+                  <div>
+                    <div style={{fontWeight:600}}>{s.name}</div>
+                    <div style={{fontSize:12,color:'#64748b'}}>{s.municipality}</div>
+                  </div>
+                  <Badge status={s.status}/>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="card" style={{padding:16}}>
+            <h3>Dodaj novo točko (predlog)</h3>
+            <p style={{fontSize:13,color:'#64748b'}}>Klik vpiše predlog; moderator pregleda v 48–72 urah.</p>
+            <FormAddProposal/>
+          </div>
+
+          <div className="card" style={{padding:16}}>
+            <h3>Prijavi okvaro</h3>
+            <FormReportIssue/>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+function FormAddProposal(){
+  const [f,setF] = useState({ name:'', municipality:'', type:'Polnilnica', access:'24/7', desc:'' });
+  const [sent,setSent] = useState(false);
+  return sent ? (
+    <div className="badge badge-ok">Hvala! Predlog je poslan v pregled.</div>
+  ) : (
+    <form className="grid" style={{gap:10}} onSubmit={e=>{e.preventDefault(); setSent(true)}}>
+      <div className="row" style={{gridTemplateColumns:'1fr 1fr'}}>
+        <div>
+          <label>Naziv</label>
+          <input value={f.name} onChange={e=>setF({...f,name:e.target.value})} required placeholder="Polnilnica pri TIC"/>
+        </div>
+        <div>
+          <label>Občina</label>
+          <input value={f.municipality} onChange={e=>setF({...f,municipality:e.target.value})} placeholder="npr. Ljubljana"/>
+        </div>
+      </div>
+      <div className="row" style={{gridTemplateColumns:'1fr 1fr'}}>
+        <div>
+          <label>Tip</label>
+          <select value={f.type} onChange={e=>setF({...f,type:e.target.value})}>
+            <option>Polnilnica</option>
+            <option>Servisna postaja (fix‑it)</option>
+            <option>Pumpa</option>
+            <option>Kolesarnica</option>
+          </select>
+        </div>
+        <div>
+          <label>Dostopnost</label>
+          <select value={f.access} onChange={e=>setF({...f,access:e.target.value})}>
+            <option>24/7</option>
+            <option>8:00–20:00</option>
+            <option>Drugo</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label>Opis</label>
+        <textarea rows={3} value={f.desc} onChange={e=>setF({...f,desc:e.target.value})} placeholder="Kratek opis, npr. pod nadstreškom pri vhodu."/>
+      </div>
+      <button className="btn btn-primary">Pošlji predlog</button>
+    </form>
+  );
+}
+
+function FormReportIssue(){
+  const [f,setF] = useState({ station:'', desc:'' });
+  const [sent,setSent] = useState(false);
+  return sent ? (
+    <div className="badge badge-ok">Hvala! Okvara je prijavljena.</div>
+  ) : (
+    <form className="grid" style={{gap:10}} onSubmit={e=>{e.preventDefault(); setSent(true)}}>
+      <div>
+        <label>Postaja</label>
+        <select value={f.station} onChange={e=>setF({...f,station:e.target.value})} required>
+          <option value="">Izberi…</option>
+          {demoStations.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+        </select>
+      </div>
+      <div>
+        <label>Opis težave</label>
+        <textarea rows={3} value={f.desc} onChange={e=>setF({...f,desc:e.target.value})} required placeholder="Npr. manjka imbus, vtičnica ne dela."/>
+      </div>
+      <button className="btn">Pošlji prijavo</button>
+    </form>
+  );
+}
+
+function Citizens(){
+  return (
+    <main className="container" style={{padding:'24px 0'}}>
+      <h1>Za občane</h1>
+      <div className="grid grid-2" style={{alignItems:'start'}}>
+        <div className="card" style={{padding:16}}>
+          <h3>Lokalne informacije</h3>
+          <p>Preverite delovanje bližnjih postaj, prijavite okvaro ali predlagajte novo lokacijo. Vključite se v program »Posvoji postajo«.</p>
+          <a className="btn" href="#zemljevid">Odpri zemljevid</a>
+        </div>
+        <div className="hero-illustration"><ImgFallback src="/assets/map-neighborhood.jpg" alt="Lokalni zemljevid (fotografija)" height={260}/></div>
+      </div>
+    </main>
+  );
+}
+
+function Tourists(){
+  return (
+    <main className="container" style={{padding:'24px 0'}}>
+      <h1>Za turiste</h1>
+      <div className="card" style={{padding:16}}>
+        <p>Izberite jezik (italijanski, nemški, francoski, angleški). Kratka pravila: prinesite lasten polnilec, upoštevajte navodila, bodite pozorni na varno parkiranje. Raziščite predlagane poti in ponudnike »kolesarjem prijaznih« storitev.</p>
+      </div>
+      <div className="hero-illustration" style={{marginTop:12}}><ImgFallback src="/assets/map-tourism.jpg" alt="Turistični zemljevid (fotografija)" height={320}/></div>
+    </main>
+  );
+}
+
+function Municipal(){
+  return (
+    <main className="container" style={{padding:'24px 0'}}>
+      <h1>Za občine</h1>
+      <div className="grid grid-2" style={{alignItems:'start'}}>
+        <div className="card" style={{padding:16}}>
+          <h3>Standard in vzorci</h3>
+          <p>Tehnični standard postavitve (napajanje, nadstrešek, signalizacija, dostopnost, orodje), vzdrževalni dogovori in primeri razpisov.</p>
+          <a className="btn btn-primary" href="#portal-obcina">Vstop v portal občine</a>
+        </div>
+        <div className="card" style={{padding:16}}>
+          <h3>Zakaj sodelovati</h3>
+          <ul>
+            <li>Vidna skrb za trajnostno mobilnost</li>
+            <li>Turistični učinek (daljši postanki, večja potrošnja)</li>
+            <li>Transparentnost stanja (dashboard, poročila)</li>
+          </ul>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+function Policymakers(){
+  return (
+    <main className="container" style={{padding:'24px 0'}}>
+      <h1>Za odločevalce</h1>
+      <div className="card" style={{padding:16}}>
+        <p>Kratki povzetki politik in priporočil, agregatni kazalniki (po občinah in regijah), odprti podatki in metodologija merjenja (pokritost, delež delujočih postaj, čas reševanja okvar).</p>
+        <a className="btn btn-primary" href="#portal-ministrstvo">Vstop v portal ministrstva</a>
+      </div>
+    </main>
+  );
+}
+
+function Membership(){
+  return (
+    <main className="container" style={{padding:'24px 0'}}>
+      <h1>Članstvo</h1>
+      <div className="card" style={{padding:16}}>
+        <p>Podprite razvoj mreže postaj in prejemajte novičke. Z vašo pomočjo bo na voljo vsaj ena delujoča postaja v vsaki občini.</p>
+        <div style={{display:'flex',gap:8,marginTop:8}}>
+          <button className="btn btn-primary">Postani član</button>
+          <button className="btn">Doniraj</button>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+function Contact(){
+  const [sent,setSent] = useState(false);
+  const [f,setF] = useState({ name:'', email:'', message:'' });
+  return (
+    <main className="container" style={{padding:'24px 0'}}>
+      <h1>Kontakt</h1>
+      <div className="card" style={{padding:16}}>
+        {sent ? (
+          <div className="badge badge-ok">Hvala! Odgovorimo v kratkem.</div>
+        ) : (
+          <form className="grid" style={{gap:10}} onSubmit={e=>{e.preventDefault(); setSent(true)}}>
+            <div className="row" style={{gridTemplateColumns:'1fr 1fr'}}>
+              <div>
+                <label>Ime in priimek</label>
+                <input value={f.name} onChange={e=>setF({...f,name:e.target.value})} required/>
+              </div>
+              <div>
+                <label>E‑pošta</label>
+                <input type="email" value={f.email} onChange={e=>setF({...f,email:e.target.value})} required/>
+              </div>
+            </div>
+            <div>
+              <label>Sporočilo</label>
+              <textarea rows={4} value={f.message} onChange={e=>setF({...f,message:e.target.value})} required/>
+            </div>
+            <button className="btn">Pošlji</button>
+          </form>
+        )}
+      </div>
+    </main>
+  );
+}
+
+// ------------------------------
+// Portali (demo geslo 1234)
+// ------------------------------
+function usePasswordGate(kind){
+  const key = `gate-${kind}`;
+  const [ok,setOk] = useState(()=> safeLocalGet(key,'') === 'ok');
+  const [p,setP] = useState('');
+  if(!ok){
+    return {
+      ok:false,
+      view:(
+        <div className="container" style={{padding:'24px 0'}}>
+          <div className="card" style={{padding:16,maxWidth:420,margin:'0 auto'}}>
+            <h2>Prijava — {kind==='obcina'?'portal občine':kind==='ministrstvo'?'portal ministrstva':'portal moderatorja'}</h2>
+            <p style={{fontSize:13,color:'#64748b'}}>Za demo je geslo <strong>1234</strong>. (V produkciji bo enotna prijava in vloge.)</p>
+            <label>Geslo</label>
+            <input type="password" value={p} onChange={e=>setP(e.target.value)} placeholder="Vnesi geslo"/>
+            <div style={{display:'flex',justifyContent:'flex-end',marginTop:12}}>
+              <button className="btn btn-primary" onClick={()=>{ if(p==='1234'){ safeLocalSet(key,'ok'); setOk(true) } else alert('Napačno geslo.') }}>Vstopi</button>
+            </div>
+          </div>
+        </div>
+      )
+    }
+  }
+  return { ok:true, view:null }
+}
+
+function PortalMunicipality(){
+  const gate = usePasswordGate('obcina');
+  if(!gate.ok) return gate.view;
+  return (
+    <main className="container" style={{padding:'24px 0'}}>
+      <h1>Portal občine — pregled</h1>
+      <div className="grid grid-3">
+        <div className="card" style={{padding:16}}>
+          <h3>Kazalniki</h3>
+          <ul>
+            <li>Število postaj: 7</li>
+            <li>Delujoče: 6</li>
+            <li>Okvarjene: 1 (odziv: 5 dni)</li>
+          </ul>
+        </div>
+        <div className="card" style={{padding:16}}>
+          <h3>Predlogi občanov</h3>
+          <p>3 novi predlogi čakajo na odobritev.</p>
+          <button className="btn">Odpri seznam</button>
+        </div>
+        <div className="card" style={{padding:16}}>
+          <h3>Poročila</h3>
+          <button className="btn">Prenesi PDF</button>
+          <button className="btn btn-ghost" style={{marginLeft:8}}>Izvoz CSV</button>
+        </div>
+      </div>
+    </main>
+  );
+}
+function PortalMinistry(){
+  const gate = usePasswordGate('ministrstvo');
+  if(!gate.ok) return gate.view;
+  return (
+    <main className="container" style={{padding:'24px 0'}}>
+      <h1>Portal ministrstva — nacionalni pregled</h1>
+      <div className="grid grid-2">
+        <div className="card" style={{padding:16}}>
+          <h3>Kazalniki (nacionalno)</h3>
+          <ul>
+            <li>Pokritost občin s postajami: 38%</li>
+            <li>Povprečen čas reševanja okvar: 6 dni</li>
+            <li>Predlogi uporabnikov ta mesec: 42</li>
+          </ul>
+        </div>
+        <div className="hero-illustration"><ImgFallback src="/assets/map-national.jpg" alt="Nacionalni pregled (fotografija)" height={260}/></div>
+      </div>
+    </main>
+  );
+}
+function PortalModerator(){
+  const gate = usePasswordGate('moderator');
+  if(!gate.ok) return gate.view;
+  return (
+    <main className="container" style={{padding:'24px 0'}}>
+      <h1>Portal moderatorja</h1>
+      <div className="grid grid-2" style={{alignItems:'start'}}>
+        <div className="card" style={{padding:16}}>
+          <h3>Predlogi za odobritev</h3>
+          <ul style={{listStyle:'none',padding:0,margin:0}}>
+            {[{name:'Polnilnica — Trg republike', municipality:'Ljubljana'},{name:'Servisna — Pristaniška', municipality:'Koper'}].map((x,i)=> (
+              <li key={i} style={{padding:'10px 0',borderBottom:'1px solid #f1f5f9'}}>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                  <div>
+                    <div style={{fontWeight:600}}>{x.name}</div>
+                    <div style={{fontSize:12,color:'#64748b'}}>{x.municipality}</div>
+                  </div>
+                  <div style={{display:'flex',gap:8}}>
+                    <button className="btn btn-primary">Odobri (OK)</button>
+                    <button className="btn">Na čakanje</button>
+                    <button className="btn btn-ghost">Zavrni</button>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="card" style={{padding:16}}>
+          <h3>Prijave okvar</h3>
+          <ul style={{listStyle:'none',padding:0,margin:0}}>
+            {[{station:'Kongresni trg', desc:'Vtičnica ne deluje'}].map((r,i)=>(
+              <li key={i} style={{padding:'10px 0',borderBottom:'1px solid #f1f5f9'}}>
+                <div style={{fontWeight:600}}>{r.station}</div>
+                <div style={{fontSize:12,color:'#64748b'}}>{r.desc}</div>
+                <div style={{display:'flex',gap:8,marginTop:8}}>
+                  <button className="btn btn-primary">Označi kot deluje</button>
+                  <button className="btn">Označi kot okvarjeno</button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+// ------------------------------
+// Mapiranje poti → komponenta (definirano PO vseh komponentah!)
+// ------------------------------
+const ROUTE_MAP = {
+  '#domov': Home,
+  '#zemljevid': MapPage,
+  '#obcani': Citizens,
+  '#turisti': Tourists,
+  '#obcine': Municipal,
+  '#odlocevalci': Policymakers,
+  '#clanstvo': Membership,
+  '#kontakt': Contact,
+  '#portal-obcina': PortalMunicipality,
+  '#portal-ministrstvo': PortalMinistry,
+  '#portal-moderator': PortalModerator,
+};
+
+// ------------------------------
+// Glavna aplikacija
+// ------------------------------
+function Shell(){
+  const hash = useHashRoute();
+  const Comp = ROUTE_MAP[hash] || ROUTE_MAP['#domov'];
+  return (
+    <div>
+      <style>{css}</style>
+      <Header/>
+      <Comp/>
+      <Footer/>
+    </div>
+  );
+}
+
+export default function App(){
+  return (
+    <ErrorBoundary>
+      <Shell/>
+    </ErrorBoundary>
+  );
+}
