@@ -1,0 +1,30 @@
+Вот базовый *HTML-код одностраничного сайта-магазина цветов*, адаптированный под 
+```html
+<!DOCTYPE html>
+<html lang="r
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Магазин цветов</title>
+  <style>
+    body { font-family: sans-serif; margin: 0; padding: 20px; background: #fff8f8; }
+    h1 { text-align: center; color: #c0392b; }
+    .product { background: #fff; border-radius: 10px; padding: 15px; margin: 15px 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .product img { width: 100%; border-radius: 10px; }
+    .product h2 { font-size: 18px; margin: 10px 0 5px; }
+    .product p { margin: 0 0 10px; color: #666; }
+    .btn { display: inline-block; padding: 10px 15px; background: #27ae60; color: white; text-decoration: none; border-radius: 5px; }
+  </style>
+</head>
+<body>
+
+  <h1>🌸 Цветочный магазин</h1>
+
+  <div class="product">
+    <img src="https://via.placeholder.com/300x200?text=Розы+Джумелия" alt="Розы">
+    <h2>Розы Джумелия</h2>
+    <p>Свежее поступление. 20 шт.</p>
+    <a class="btn" href="https://wa.me/77001112233?text=Здравствуйте!%20Хочу%20заказать%20розы%20Джумелия">Заказать в WhatsApp</a>
+  </div>
+
+  <div class="product">
