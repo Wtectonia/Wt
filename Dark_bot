@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>دارک بات</title>
+  <style>
+    body { font-family: tahoma, sans-serif; background: #0d0d0d; color: #fff; text-align: center; margin: 0; padding: 0; }
+    header { background: #1a1a1a; padding: 20px; font-size: 24px; font-weight: bold; }
+    .options, .plans, .payment, .support { margin: 20px auto; max-width: 400px; }
+    button { display: block; width: 100%; margin: 10px 0; padding: 15px; font-size: 18px; border: none; border-radius: 10px; cursor: pointer; }
+    .robika { background: #ff5722; color: #fff; }
+    .telegram { background: #2196f3; color: #fff; }
+    .plan { background: #333; color: #fff; }
+    .hidden { display: none; }
+    input { width: 90%; padding: 10px; margin: 10px 0; border-radius: 8px; border: none; }
+    .card { background: #222; padding: 20px; border-radius: 12px; box-shadow: 0 0 10px rgba(255,255,255,0.1); }
+  </style>
+</head>
+<body>
+  <header>🔥 دارک بات 🔥</header>
+  <div class="options" id="options">
+    <div class="card">
+      <button class="robika" onclick="selectBot('robika')">🤖 ربات مدیریت گروه روبیکا</button>
+      <button class="telegram" onclick="selectBot('telegram')">🤖 ربات مدیریت گروه تلگرام</button>
+    </div>
+  </div>
+  <div class="plans hidden" id="plans">
+    <div class="card">
+      <h3>انتخاب پلن</h3>
+      <button class="plan" onclick="selectPlan('یک ماهه - 30,000 تومان')">یک ماهه - 30,000 تومان</button>
+      <button class="plan" onclick="selectPlan('سه ماهه - 60,000 تومان')">سه ماهه - 60,000 تومان</button>
+      <button class="plan" onclick="selectPlan('نامحدود - 120,000 تومان')">نامحدود - 120,000 تومان</button>
+    </div>
+  </div>
+  <div class="payment hidden" id="payment">
+    <div class="card">
+      <h3>پرداخت</h3>
+      <p>لطفا مبلغ را به شماره کارت زیر واریز کنید:</p>
+      <p><b>5022-2915-8551-0686</b></p>
+      <p>بعد از پرداخت، شماره خط خود را وارد کنید:</p>
+      <input type="text" id="phone" placeholder="شماره خط">
+      <button onclick="submitPayment()">ثبت</button>
+      <p id="result"></p>
+    </div>
+  </div>
+  <div class="support">
+    <div class="card">
+      <h3>پشتیبانی</h3>
+      <p>تلگرام: <b>@TahaDangerm</b></p>
+      <p>روبیکا: <b>@GodtahaA</b></p>
+    </div>
+  </div>
+  <script>
+    let selectedBot = "";
+    let selectedPlan = "";
+    function selectBot(bot) { selectedBot = bot; document.getElementById('options').classList.add('hidden'); document.getElementById('plans').classList.remove('hidden'); }
+    function selectPlan(plan) { selectedPlan = plan; document.getElementById('plans').classList.add('hidden'); document.getElementById('payment').classList.remove('hidden'); }
+    function submitPayment() {
+      const phone = document.getElementById('phone').value;
+      const result = document.getElementById('result');
+      if (phone === "09134145617") { result.innerHTML = "✅ شما به عنوان مدیر رایگان وارد شدید!"; }
+      else if (phone.trim() === "") { result.innerHTML = "❌ لطفا شماره خط را وارد کنید."; }
+      else { result.innerHTML = `✅ شماره ${phone} ثبت شد. لطفا پس از پرداخت به پشتیبانی پیام دهید.`; }
+    }
+  </script>
+</body>
+</html>
