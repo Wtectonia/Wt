@@ -1,0 +1,614 @@
+editwitharm/
+├─ package.json
+├─ server.js
+├─ .gitignore
+├─ /uploads            # auto-created by server (client uploads)
+├─ /deliveries         # auto-created by server (final edits to clients)
+├─ /data
+│  ├─ orders.json      # auto-created
+│  └─ deliveries.json  # auto-created
+└─ /public
+   ├─ index.html       # main site
+   ├─ admin.html       # simple private delivery uploader (PIN protected)
+   ├─ style.css
+   └─ script.js{
+  "name": "editwitharm",
+  "version": "1.0.0",
+  "description": "Personal video editing portfolio + client upload + simple delivery links",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "multer": "^1.4.5-lts.1",
+    "uuid": "^9.0.1"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}node_modules
+uploads
+deliveries
+data
+.DS_Store
+.envconst express = require('express');
+const path = require('path');
+const fs = require('fs');
+const cors = require('cors');
+const multer = require('multer');
+const { v4: uuidv4 } = require('uuid');
+
+// ====== Config ======
+const PORT = process.env.PORT || 3000;
+const ADMIN_PIN = process.env.ADMIN_PIN || 'arm1234'; // CHANGE THIS!
+
+// Create folders if missing
+const ensureDir = (p) => { if (!fs.existsSync(p)) fs.mkdirSync(p, { recursive: true }); };
+ensureDir(path.join(__dirname, 'uploads'));
+ensureDir(path.join(__dirname, 'deliveries'));
+ensureDir(path.join(__dirname, 'data'));
+
+// JSON helpers
+const ordersPath = path.join(__dirname, 'data', 'orders.json');
+const deliveriesPath = path.join(__dirname, 'data', 'deliveries.json');
+if (!fs.existsSync(ordersPath)) fs.writeFileSync(ordersPath, '[]');
+if (!fs.existsSync(deliveriesPath)) fs.writeFileSync(deliveriesPath, '[]');
+
+const readJSON = (p) => JSON.parse(fs.readFileSync(p, 'utf8'));
+const writeJSON = (p, data) => fs.writeFileSync(p, JSON.stringify(data, null, 2));
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use('/public', express.static(path.join(__dirname, 'public')));
+app.use('/static', express.static(path.join(__dirname, 'public')));
+app.use('/u', express.static(path.join(__dirname, 'uploads'))); // optional exposure for debugging
+
+// ====== Multer setups ======
+const clientStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, path.join(__dirname, 'uploads')),
+  filename: (req, file, cb) => {
+    const id = uuidv4();
+    const safe = file.originalname.replace(/[^a-zA-Z0-9_.-]/g, '_');
+    cb(null, `${id}_${safe}`);
+  }
+});
+const clientUpload = multer({ storage: clientStorage, limits: { fileSize: 1024 * 1024 * 200 } }); // 200MB
+
+const deliveryStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, path.join(__dirname, 'deliveries')),
+  filename: (req, file, cb) => {
+    const id = uuidv4();
+    const safe = file.originalname.replace(/[^a-zA-Z0-9_.-]/g, '_');
+    cb(null, `${id}_${safe}`);
+  }
+});
+const deliveryUpload = multer({ storage: deliveryStorage, limits: { fileSize: 1024 * 1024 * 500 } }); // 500MB
+
+// ====== Routes ======
+// Home
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Admin upload page (simple PIN gate handled client-side + server validates)
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+// Client upload API
+app.post('/api/upload', clientUpload.single('clientFile'), (req, res) => {
+  try {
+    const { name, email, phone, message, service, price } = req.body;
+    const file = req.file ? req.file.filename : null;
+    const orderId = uuidv4();
+
+    const orders = readJSON(ordersPath);
+    orders.push({
+      orderId,
+      createdAt: new Date().toISOString(),
+      name, email, phone, message, service, price,
+      file
+    });
+    writeJSON(ordersPath, orders);
+
+    res.json({ ok: true, orderId });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ok: false, error: 'Upload failed' });
+  }
+});
+
+// Delivery upload (admin)
+app.post('/api/deliveries', deliveryUpload.single('finalFile'), (req, res) => {
+  try {
+    const pin = req.headers['x-admin-pin'] || req.body.pin;
+    if (pin !== ADMIN_PIN) return res.status(401).json({ ok: false, error: 'Invalid PIN' });
+
+    const { clientEmail, note } = req.body;
+    const file = req.file ? req.file.filename : null;
+    const token = uuidv4();
+
+    const deliveries = readJSON(deliveriesPath);
+    deliveries.push({ token, clientEmail, note, file, createdAt: new Date().toISOString() });
+    writeJSON(deliveriesPath, deliveries);
+
+    const link = `${req.protocol}://${req.get('host')}/d/${token}`;
+    res.json({ ok: true, link, token });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ok: false, error: 'Delivery failed' });
+  }
+});
+
+// Delivery page (public but unlisted, token-based)
+app.get('/d/:token', (req, res) => {
+  res.send(`<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Your Edit — Download</title>
+  <link rel="stylesheet" href="/public/style.css" />
+</head>
+<body class="delivery-page">
+  <div class="container">
+    <h1>Final Edit Delivery</h1>
+    <div id="deliveryRoot" data-token="${req.params.token}">
+      <p>Loading your file...</p>
+    </div>
+    <footer class="footer">© <span id="year"></span> editwitharm</footer>
+  </div>
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+    const token = document.getElementById('deliveryRoot').dataset.token;
+    fetch('/api/deliveries/' + token).then(r => r.json()).then(data => {
+      const root = document.getElementById('deliveryRoot');
+      if (!data.ok) { root.innerHTML = '<p class="error">Link invalid or expired.</p>'; return; }
+      root.innerHTML = `
+        <div class="card">
+          <h2>Your file is ready</h2>
+          ${data.note ? `<p><strong>Note:</strong> ${data.note}</p>` : ''}
+          <a class="btn" href="/file/${data.file}" download>Download Now</a>
+        </div>
+      `;
+    }).catch(() => {
+      document.getElementById('deliveryRoot').innerHTML = '<p class="error">Something went wrong.</p>';
+    });
+  </script>
+</body>
+</html>`);
+});
+
+// Delivery data fetch
+app.get('/api/deliveries/:token', (req, res) => {
+  const { token } = req.params;
+  const deliveries = readJSON(deliveriesPath);
+  const item = deliveries.find(d => d.token === token);
+  if (!item) return res.status(404).json({ ok: false });
+  res.json({ ok: true, file: item.file, note: item.note || '' });
+});
+
+// File serve for deliveries
+app.get('/file/:filename', (req, res) => {
+  const filePath = path.join(__dirname, 'deliveries', req.params.filename);
+  if (!fs.existsSync(filePath)) return res.status(404).send('Not found');
+  res.download(filePath);
+});
+
+app.listen(PORT, () => {
+  console.log(`editwitharm server running on http://localhost:${PORT}`);
+});<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>editwitharm — Video Editing Services</title>
+  <meta name="description" content="Professional video editor. Demo edits, pricing, instant contact, file upload, and private delivery links." />
+  <link rel="stylesheet" href="/public/style.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="container nav">
+      <div class="brand">
+        <div class="logo" id="siteLogo">EWA</div>
+        <div>
+          <h1 class="title">editwitharm</h1>
+          <p class="subtitle">Professional Video Editor</p>
+        </div>
+      </div>
+      <nav class="menu">
+        <a href="#demos">Demos</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#upload">Upload</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="container hero-inner">
+      <div class="hero-text">
+        <h2>Make your videos pop ✨</h2>
+        <p>Fast, clean, and stylish edits for reels, YouTube, weddings, gaming, and more.</p>
+        <div class="actions">
+          <a class="btn" href="#demos">See Demos</a>
+          <a class="btn outline" id="whatsappBtn" target="_blank">WhatsApp</a>
+        </div>
+      </div>
+      <div class="hero-card">
+        <div class="card">
+          <h3>Payment</h3>
+          <p>Pay online to this number:</p>
+          <div class="copy-row">
+            <code id="payNumber">9239529167</code>
+            <button class="btn sm" id="copyBtn">Copy</button>
+          </div>
+          <small>After payment, send screenshot via WhatsApp or Upload form.</small>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="demos" class="section">
+    <div class="container">
+      <h2>Demo Edits</h2>
+      <p class="muted">Some recent styles and cuts. Prices are indicative; final depends on requirements.</p>
+
+      <div class="grid">
+        <!-- Demo Card 1 -->
+        <div class="card demo">
+          <div class="media">
+            <video controls preload="metadata" src="https://cdn.glitch.global/placeholder/demo1.mp4" poster="https://cdn.glitch.global/placeholder/poster1.jpg"></video>
+          </div>
+          <div class="demo-info">
+            <h3>Reels / Short Edit</h3>
+            <p>Snappy transitions, color touch, captions.</p>
+            <div class="price-row">
+              <span class="price" data-price="399">₹399</span>
+              <button class="btn buy-btn" data-service="Reel Edit" data-price="399">Buy</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Demo Card 2 -->
+        <div class="card demo">
+          <div class="media">
+            <video controls preload="metadata" src="https://cdn.glitch.global/placeholder/demo2.mp4" poster="https://cdn.glitch.global/placeholder/poster2.jpg"></video>
+          </div>
+          <div class="demo-info">
+            <h3>Gaming Montage</h3>
+            <p>Beat sync, effects, highlights.</p>
+            <div class="price-row">
+              <span class="price" data-price="799">₹799</span>
+              <button class="btn buy-btn" data-service="Gaming Montage" data-price="799">Buy</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Demo Card 3 -->
+        <div class="card demo">
+          <div class="media">
+            <video controls preload="metadata" src="https://cdn.glitch.global/placeholder/demo3.mp4" poster="https://cdn.glitch.global/placeholder/poster3.jpg"></video>
+          </div>
+          <div class="demo-info">
+            <h3>Event / Wedding Teaser</h3>
+            <p>Story-driven, cinematic color, licensed music.</p>
+            <div class="price-row">
+              <span class="price" data-price="1999">₹1999</span>
+              <button class="btn buy-btn" data-service="Wedding Teaser" data-price="1999">Buy</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="pricing" class="section alt">
+    <div class="container">
+      <h2>Pricing</h2>
+      <div class="grid pricing-grid">
+        <div class="card">
+          <h3>Basic</h3>
+          <p class="muted">Reels, simple cuts</p>
+          <div class="price">₹399+</div>
+          <ul>
+            <li>Up to 60s</li>
+            <li>2 revisions</li>
+            <li>Delivery 24–48h</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Standard</h3>
+          <p class="muted">YouTube / Gaming</p>
+          <div class="price">₹799+</div>
+          <ul>
+            <li>Up to 5 min</li>
+            <li>3 revisions</li>
+            <li>Custom effects</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Pro</h3>
+          <p class="muted">Event / Wedding</p>
+          <div class="price">₹1999+</div>
+          <ul>
+            <li>Up to 2–3 min teaser</li>
+            <li>Color + music license</li>
+            <li>Priority edits</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="upload" class="section">
+    <div class="container">
+      <h2>Upload Your Files</h2>
+      <p class="muted">Send your photos/videos and details. I will confirm on WhatsApp: <strong id="wtpInline"></strong></p>
+
+      <form id="uploadForm" class="form" enctype="multipart/form-data">
+        <div class="form-row">
+          <label>Name</label>
+          <input type="text" name="name" placeholder="Your name" required />
+        </div>
+        <div class="form-row">
+          <label>Email</label>
+          <input type="email" name="email" placeholder="you@example.com" required />
+        </div>
+        <div class="form-row">
+          <label>Phone</label>
+          <input type="tel" name="phone" placeholder="Your phone" />
+        </div>
+        <div class="form-row">
+          <label>Choose Service</label>
+          <select name="service">
+            <option>Reel Edit</option>
+            <option>Gaming Montage</option>
+            <option>Wedding Teaser</option>
+            <option>Custom</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Estimated Price (₹)</label>
+          <input type="number" name="price" placeholder="e.g., 799" />
+        </div>
+        <div class="form-row">
+          <label>Message / Requirements</label>
+          <textarea name="message" rows="4" placeholder="Explain your idea, style, music, deadline..."></textarea>
+        </div>
+        <div class="form-row">
+          <label>Upload File</label>
+          <input type="file" name="clientFile" accept="video/*,image/*" required />
+        </div>
+        <button class="btn" type="submit">Send</button>
+        <p id="uploadMsg" class="muted"></p>
+      </form>
+    </div>
+  </section>
+
+  <section id="contact" class="section alt">
+    <div class="container">
+      <h2>Contact</h2>
+      <div class="contact-grid">
+        <div class="card">
+          <h3>Direct</h3>
+          <p>Phone / WhatsApp: <strong id="wtp"></strong></p>
+          <a class="btn" id="whatsappBtn2" target="_blank">Chat on WhatsApp</a>
+        </div>
+        <div class="card">
+          <h3>Custom Logo</h3>
+          <p>You can replace the top-left logo anytime. Click to upload a new logo (PNG/JPG).</p>
+          <input id="logoInput" type="file" accept="image/*" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    © <span id="year"></span> editwitharm • Built on Glitch
+  </footer>
+
+  <script>
+    window.__ARM_NUMBER__ = '9239529167';
+  </script>
+  <script src="/public/script.js"></script>
+</body>
+</html><!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin — Deliver Final Edit</title>
+  <link rel="stylesheet" href="/public/style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Deliver Final Edit</h1>
+
+    <form id="deliveryForm" class="form" enctype="multipart/form-data">
+      <div class="form-row">
+        <label>Admin PIN</label>
+        <input type="password" id="pin" placeholder="Enter PIN" required />
+      </div>
+      <div class="form-row">
+        <label>Client Email (optional)</label>
+        <input type="email" id="clientEmail" placeholder="client@example.com" />
+      </div>
+      <div class="form-row">
+        <label>Note to Client</label>
+        <textarea id="note" rows="3" placeholder="Any message..."></textarea>
+      </div>
+      <div class="form-row">
+        <label>Final File</label>
+        <input type="file" id="finalFile" accept="video/*,image/*,application/zip" required />
+      </div>
+      <button class="btn" type="submit">Generate Private Link</button>
+      <p id="deliveryMsg" class="muted"></p>
+    </form>
+  </div>
+
+  <script>
+    document.getElementById('deliveryForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msg = document.getElementById('deliveryMsg');
+      msg.textContent = 'Uploading...';
+
+      const form = new FormData();
+      form.append('finalFile', document.getElementById('finalFile').files[0]);
+      form.append('clientEmail', document.getElementById('clientEmail').value);
+      form.append('note', document.getElementById('note').value);
+
+      const res = await fetch('/api/deliveries', {
+        method: 'POST',
+        headers: { 'x-admin-pin': document.getElementById('pin').value },
+        body: form
+      });
+
+      const data = await res.json();
+      if (data.ok) {
+        msg.innerHTML = `✅ Link created: <a href="${data.link}" target="_blank">${data.link}</a>`;
+      } else {
+        msg.textContent = '❌ ' + (data.error || 'Failed');
+      }
+    });
+  </script>
+</body>
+</html>:root {
+  --bg: #0b0c10;
+  --card: #151821;
+  --text: #e6e6e6;
+  --muted: #a8a8a8;
+  --brand: #7c5cff;
+  --brand-2: #00e0a4;
+  --border: #262b36;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+
+.container { width: min(1100px, 92%); margin: 0 auto; }
+.header { position: sticky; top: 0; background: rgba(11,12,16,0.7); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); z-index: 10; }
+.nav { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; }
+.brand { display: flex; align-items: center; gap: 12px; }
+.logo { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, var(--brand), var(--brand-2)); display: grid; place-items: center; font-weight: 800; }
+.title { margin: 0; font-size: 20px; }
+.subtitle { margin: 0; color: var(--muted); font-size: 12px; }
+.menu a { color: var(--text); text-decoration: none; margin-left: 16px; opacity: .9; }
+.menu a:hover { opacity: 1; }
+
+.hero { padding: 40px 0 10px; border-bottom: 1px solid var(--border); }
+.hero-inner { display: grid; grid-template-columns: 1.2fr .8fr; gap: 20px; align-items: center; }
+.hero-text h2 { font-size: 36px; margin: 0 0 8px; }
+.hero-text p { margin: 0 0 16px; color: var(--muted); }
+.actions { display: flex; gap: 10px; }
+
+.btn { background: var(--brand); color: #0b0c10; border: none; padding: 10px 16px; border-radius: 12px; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-block; }
+.btn:hover { filter: brightness(1.05); }
+.btn.outline { background: transparent; border: 1px solid var(--brand); color: var(--text); }
+.btn.sm { padding: 6px 10px; font-size: 12px; }
+
+.section { padding: 40px 0; }
+.section.alt { background: #0f1219; }
+.muted { color: var(--muted); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; box-shadow: 0 8px 16px rgba(0,0,0,.2); }
+.demo .media { aspect-ratio: 16/9; background: #0f1117; border-radius: 12px; overflow: hidden; margin-bottom: 12px; }
+.demo .media video { width: 100%; height: 100%; object-fit: cover; }
+.price-row { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+.price { font-weight: 800; }
+
+.pricing-grid .card { text-align: left; }
+.pricing-grid ul { padding-left: 16px; margin: 10px 0 0; color: var(--muted); }
+
+.form { display: grid; gap: 12px; }
+.form-row { display: grid; gap: 6px; }
+.form input, .form select, .form textarea { background: #0f1117; color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 10px; }
+.copy-row { display: flex; align-items: center; gap: 10px; }
+code { background: #0f1117; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--border); }
+
+.contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.footer { padding: 20px 0; text-align: center; color: var(--muted); border-top: 1px solid var(--border); }
+
+/* Delivery page */
+.delivery-page .container { width: min(720px, 95%); }
+.error { color: #ffb1b1; }
+
+@media (max-width: 860px) {
+  .hero-inner { grid-template-columns: 1fr; }
+  .contact-grid { grid-template-columns: 1fr; }
+}(function(){
+  const number = window.__ARM_NUMBER__ || '9239529167';
+  const wtpUrl = `https://wa.me/${number}?text=${encodeURIComponent('Hi! I want to order an edit from editwitharm.')}`;
+
+  // Fill WhatsApp links
+  document.getElementById('whatsappBtn').href = wtpUrl;
+  document.getElementById('whatsappBtn2').href = wtpUrl;
+  document.getElementById('wtp').textContent = number;
+  document.getElementById('wtpInline').textContent = number;
+
+  // Year
+  const y = document.getElementById('year'); if (y) y.textContent = new Date().getFullYear();
+
+  // Copy payment number
+  const copyBtn = document.getElementById('copyBtn');
+  const payNumber = document.getElementById('payNumber');
+  copyBtn.addEventListener('click', async () => {
+    await navigator.clipboard.writeText(payNumber.textContent);
+    copyBtn.textContent = 'Copied';
+    setTimeout(() => copyBtn.textContent = 'Copy', 1500);
+  });
+
+  // Buy buttons pre-fill
+  document.querySelectorAll('.buy-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const service = btn.dataset.service;
+      const price = btn.dataset.price;
+      const form = document.getElementById('uploadForm');
+      form.service.value = service;
+      form.price.value = price;
+      window.location.hash = '#upload';
+    });
+  });
+
+  // Client upload form
+  const uploadForm = document.getElementById('uploadForm');
+  const uploadMsg = document.getElementById('uploadMsg');
+  uploadForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    uploadMsg.textContent = 'Uploading... please wait';
+
+    const formData = new FormData(uploadForm);
+    try {
+      const res = await fetch('/api/upload', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (data.ok) {
+        uploadMsg.textContent = `✅ Received! Your order id: ${data.orderId}. I will confirm on WhatsApp.`;
+        uploadForm.reset();
+      } else {
+        uploadMsg.textContent = '❌ Upload failed.';
+      }
+    } catch(err) {
+      uploadMsg.textContent = '❌ Network error.';
+    }
+  });
+
+  // Custom logo swap (client-side only)
+  const logo = document.getElementById('siteLogo');
+  const logoInput = document.getElementById('logoInput');
+  if (logo && logoInput) {
+    logoInput.addEventListener('change', () => {
+      const file = logoInput.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        logo.style.background = `center/cover no-repeat url(${reader.result})`;
+        logo.textContent = '';
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+})();
