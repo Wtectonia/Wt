@@ -8,7 +8,7 @@
   --font-family-list: monospace;
 
   /* Colors you'll see cascade through the elements */
-  --color-bg: #99ddff; /* Used for the page body background */
+  --color-bg: #4096a5; /* Used for the page body background */
   --color-bg-alt: #33b1ff; /* Used for social icons on hover */
   --color-text-main: #004099; /* List text ann social icons on hover */
   --color-primary: #006aff; /* Headers and borders */
@@ -119,15 +119,13 @@ a:focus {
   display: flex;
   justify-content: flex-end;
 }
-a.remix {
-  background: var(--color-bg-alt);
-  color:var(--color-highlight);
-  border: 2px solid var(--color-highlight);
-  border-radius: 5px;
-  padding:0.5rem;
-  font-weight:bold;
-}
-a.remix:hover {
-  background: var(--color-primary);
-  color:var(--color-highlight);
+
+Button {
+  color:#610099;
+  background-color: #33b1ff;
+  font-weight: bold;
+  width: 100px; 
+  border-radius: 10px;
+  height: auto; 
+  font-size: 24px;
 }
