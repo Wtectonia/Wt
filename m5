@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>🌸 Minna no Nihongo N5 — Offline Study App (1 file)</title>
+  <style>
+    :root{
+      --bg: #f8fafc; /* slate-50 */
+      --panel: #ffffff;
+      --ink: #0f172a; /* slate-900 */
+      --muted: #64748b; /* slate-500 */
+      --brand: #6366f1; /* indigo-500 */
+      --brand-2: #22c55e; /* green-500 */
+      --danger: #ef4444; /* red-500 */
+      --warn: #f59e0b; /* amber-500 */
+      --ok: #10b981; /* emerald-500 */
+      --shadow: 0 10px 25px rgba(2,6,23,.08);
+    }
+    *{box-sizing: border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Inter, Arial, "Noto Sans", sans-serif; color:var(--ink); background:linear-gradient(180deg,#eef2ff, #e0f2fe 70%);
+      display:flex; flex-direction:column; min-height:100vh; overflow:hidden;
+    }
+    header{
+      position:sticky; top:0; z-index:20; backdrop-filter: blur(10px);
+      background:rgba(255,255,255,.6); border-bottom:1px solid rgba(255,255,255,.5);
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      padding:12px 16px;
+    }
+    header .brand{display:flex; align-items:center; gap:10px; font-weight:800}
+    header .brand .title{font-size:18px}
+    header .actions{display:flex; gap:8px}
+    .btn{border:0; border-radius:14px; padding:8px 14px; cursor:pointer; background:var(--ink); color:#fff; box-shadow:var(--shadow)}
+    .btn.ghost{background:transparent; color:var(--ink); border:1px solid rgba(15,23,42,.1)}
+    .btn.small{padding:6px 10px; border-radius:10px; font-size:12px}
+
+    .wrap{display:grid; grid-template-columns: 260px 1fr; gap:16px; padding:16px; height:calc(100vh - 58px)}
+    aside{
+      height:100%; overflow:auto; background:rgba(255,255,255,.7); border:1px solid rgba(255,255,255,.8); border-radius:18px; box-shadow:var(--shadow);
+      padding:12px;
+    }
+    main{
+      height:100%; overflow:auto; background:rgba(255,255,255,.7); border:1px solid rgba(255,255,255,.8); border-radius:18px; box-shadow:var(--shadow);
+      padding:16px; scroll-behavior:smooth;
+    }
+    .section{margin-bottom:18px}
+    h2{font-size:18px; margin:0 0 10px 0}
+    .card{background:var(--panel); border:1px solid rgba(2,6,23,.06); border-radius:18px; box-shadow:var(--shadow); padding:14px; margin-bottom:12px}
+    .kpi{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px}
+    .kpi .tile{background:var(--panel); padding:12px; border-radius:16px; text-align:center; border:1px solid rgba(2,6,23,.06); box-shadow:var(--shadow)}
+    .kpi .big{font-weight:700; font-size:22px}
+    .muted{color:var(--muted); font-size:12px}
+
+    .menu-group{margin-bottom:8px}
+    .menu-title{font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:8px 6px}
+    .menu button{display:block; width:100%; text-align:left; background:#fff; border:1px solid rgba(2,6,23,.06); box-shadow:var(--shadow); color:var(--ink); padding:8px 10px; margin:6px 0; border-radius:12px; cursor:pointer}
+    .menu button.active{background:var(--brand); color:#fff}
+
+    .list{display:grid; gap:8px}
+    .row{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 12px; border-radius:12px; background:var(--panel); border:1px solid rgba(2,6,23,.06)}
+    .row .main{display:flex; flex-direction:column}
+    .row .tag{font-size:12px; color:var(--muted)}
+
+    .pill{font-size:12px; padding:4px 8px; border-radius:999px; border:1px solid rgba(2,6,23,.08); background:#fff}
+
+    .kana-grid{display:grid; grid-template-columns:repeat(10,minmax(0,1fr)); gap:6px}
+    .kana{background:#fff; border:1px solid rgba(2,6,23,.06); border-radius:14px; padding:12px 6px; text-align:center; box-shadow:var(--shadow)}
+    .kana .jp{font-size:26px; font-weight:800}
+    .kana .ro{font-size:11px; color:var(--muted)}
+
+    .quiz{display:grid; gap:8px}
+    .quiz .q{font-size:18px; font-weight:700}
+    .opt{display:block; width:100%; text-align:left; background:#fff; border:1px solid rgba(2,6,23,.08); border-radius:12px; padding:10px; cursor:pointer}
+    .opt.correct{background:#dcfce7; border-color:#86efac}
+    .opt.wrong{background:#fee2e2; border-color:#fecaca}
+
+    .bar{height:8px; background:#e2e8f0; border-radius:999px; overflow:hidden}
+    .bar > i{display:block; height:100%; background:linear-gradient(90deg, var(--brand), #22d3ee)}
+
+    summary{cursor:pointer; font-weight:700}
+    details{background:#fff; border:1px solid rgba(2,6,23,.06); border-radius:12px; padding:10px}
+
+    .toolbar{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+    input[type="search"], input[type="text"]{padding:8px 10px; border-radius:10px; border:1px solid rgba(2,6,23,.12); width:100%}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span style="font-size:22px">🌸</span>
+      <div class="title">Minna no Nihongo N5 — Offline</div>
+      <span class="pill" id="streakPill">Streak: 0🔥</span>
+    </div>
+    <div class="actions">
+      <button class="btn ghost small" id="btnExport">Export tiến độ</button>
+      <button class="btn ghost small" id="btnImport">Import tiến độ</button>
+      <button class="btn small" id="btnToggleTheme">Chế độ tối</button>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <aside>
+      <div class="menu">
+        <div class="menu-group">
+          <div class="menu-title">Tổng quan</div>
+          <button data-route="overview" class="active">📊 Tổng quan</button>
+          <button data-route="kana">あ/ア Bảng chữ</button>
+          <button data-route="review">🧠 Ôn tập nhanh</button>
+        </div>
+        <div class="menu-group">
+          <div class="menu-title">Bài học (L1–L25)</div>
+          <div id="lessonList"></div>
+        </div>
+      </div>
+    </aside>
+
+    <main id="app">
+      <!-- nội dung động -->
+    </main>
+  </div>
+
+  <input type="file" id="fileInput" accept="application/json" hidden />
+
+  <script>
+  // ============================
+  // Utils & Storage
+  // ============================
+  const $ = (sel, el=document)=> el.querySelector(sel);
+  const $$ = (sel, el=document)=> Array.from(el.querySelectorAll(sel));
+  const store = {
+    get(k, v){ try{ return JSON.parse(localStorage.getItem(k)) ?? v }catch{ return v } },
+    set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)) }catch{} },
+  };
+  const todayKey = ()=> new Date().toISOString().slice(0,10);
+
+  function speakJa(text){
+    try{ const u = new SpeechSynthesisUtterance(text); u.lang='ja-JP'; speechSynthesis.speak(u);}catch{}
+  }
+
+  function shuffle(a){ a=[...a]; for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]] } return a }
+
+  // ============================
+  // Minimal datasets (L1–L3 mẫu). Bạn có thể mở rộng dần tới L25 theo cùng cấu trúc.
+  // ============================
+  const LESSONS = {
+    1: {
+      vocab: [
+        {jp:'わたし',kana:'わたし',romaji:'watashi',vi:'tôi'},
+        {jp:'あなた',kana:'あなた',romaji:'anata',vi:'bạn'},
+        {jp:'学生',kana:'がくせい',romaji:'gakusei',vi:'học sinh, sinh viên'},
+        {jp:'先生',kana:'せんせい',romaji:'sensei',vi:'giáo viên'},
+        {jp:'会社員',kana:'かいしゃいん',romaji:'kaishain',vi:'nhân viên công ty'},
+      ],
+      grammar: [
+        { title:'A は B です', note:'A là B (lịch sự).', examples:[
+          {jp:'わたしは 学生です。',romaji:'watashi wa gakusei desu.',vi:'Tôi là học sinh.'},
+          {jp:'たなかさんは 先生です。',romaji:'Tanaka-san wa sensei desu.',vi:'Anh Tanaka là giáo viên.'}
+        ]},
+        { title:'A は B じゃありません', note:'A không phải B (phủ định).', examples:[
+          {jp:'わたしは 先生じゃありません。',romaji:'watashi wa sensei jaarimasen.',vi:'Tôi không phải giáo viên.'}
+        ]},
+        { title:'A は B ですか', note:'A có phải B không? (nghi vấn).', examples:[
+          {jp:'あなたは 学生ですか。',romaji:'anata wa gakusei desu ka?',vi:'Bạn là học sinh à?'}
+        ]}
+      ],
+      quiz:[
+        {q:'わたし ___ 学生です。', options:['は','が','を'], answer:'は', explain:'Chủ đề: わたし は ...'},
+        {q:'たなかさん ___ 先生ですか。', options:['は','が','を'], answer:'は', explain:'Câu hỏi với は.'},
+        {q:'わたしは 先生 ___ ありません。', options:['じゃ','で','を'], answer:'じゃ', explain:'Phủ định じゃありません。'}
+      ]
+    },
+    2: {
+      vocab:[
+        {jp:'これ',kana:'これ',romaji:'kore',vi:'cái này'},
+        {jp:'それ',kana:'それ',romaji:'sore',vi:'cái đó'},
+        {jp:'あれ',kana:'あれ',romaji:'are',vi:'cái kia'},
+        {jp:'この',kana:'この',romaji:'kono',vi:'~ này'},
+        {jp:'その',kana:'その',romaji:'sono',vi:'~ đó'},
+        {jp:'あの',kana:'あの',romaji:'ano',vi:'~ kia'},
+      ],
+      grammar:[
+        {title:'これ／それ／あれ', note:'Chỉ thị vật theo khoảng cách.', examples:[
+          {jp:'これは なんですか。',romaji:'kore wa nan desu ka?',vi:'Cái này là gì?'},
+        ]},
+        {title:'このN／そのN／あのN', note:'Danh từ + chỉ thị.', examples:[
+          {jp:'この ほんは わたしの です。',romaji:'kono hon wa watashi no desu.',vi:'Cuốn sách này là của tôi.'}
+        ]}
+      ],
+      quiz:[
+        {q:'___ は なんですか。 (gần người nói)', options:['これ','それ','あれ'], answer:'これ', explain:'Gần người nói → これ'},
+        {q:'___ ほんは あなたの ですか。 (~ đó)', options:['この','その','あの'], answer:'その', explain:'Gần người nghe → その'}
+      ]
+    },
+    3: {
+      vocab:[
+        {jp:'ここ',kana:'ここ',romaji:'koko',vi:'ở đây'},
+        {jp:'そこ',kana:'そこ',romaji:'soko',vi:'ở đó'},
+        {jp:'あそこ',kana:'あそこ',romaji:'asoko',vi:'ở kia'},
+        {jp:'どこ',kana:'どこ',romaji:'doko',vi:'ở đâu'},
+      ],
+      grammar:[
+        {title:'ここ／そこ／あそこ／どこ', note:'Chỉ địa điểm.', examples:[
+          {jp:'トイレは どこですか。',romaji:'toire wa doko desu ka?',vi:'Nhà vệ sinh ở đâu?'}
+        ]}
+      ],
+      quiz:[
+        {q:'えきは ___ ですか。 (ga tàu)', options:['どこ','ここ','そこ'], answer:'どこ', explain:'Hỏi nơi chốn → どこ'},
+      ]
+    }
+    // 👉 Bạn có thể bổ sung dần đến 25 theo cùng format.
+  };
+
+  // Hiragana/Katakana cơ bản (gojūon)
+  const HIRAGANA = [
+    ['あ','a'],['い','i'],['う','u'],['え','e'],['お','o'],
+    ['か','ka'],['き','ki'],['く','ku'],['け','ke'],['こ','ko'],
+    ['さ','sa'],['し','shi'],['す','su'],['せ','se'],['そ','so'],
+    ['た','ta'],['ち','chi'],['つ','tsu'],['て','te'],['と','to'],
+    ['な','na'],['に','ni'],['ぬ','nu'],['ね','ne'],['の','no'],
+    ['は','ha'],['ひ','hi'],['ふ','fu'],['へ','he'],['ほ','ho'],
+    ['ま','ma'],['み','mi'],['む','mu'],['め','me'],['も','mo'],
+    ['や','ya'],['ゆ','yu'],['よ','yo'],
+    ['ら','ra'],['り','ri'],['る','ru'],['れ','re'],['ろ','ro'],
+    ['わ','wa'],['を','wo'],['ん','n']
+  ];
+  const KATAKANA = [
+    ['ア','a'],['イ','i'],['ウ','u'],['エ','e'],['オ','o'],
+    ['カ','ka'],['キ','ki'],['ク','ku'],['ケ','ke'],['コ','ko'],
+    ['サ','sa'],['シ','shi'],['ス','su'],['セ','se'],['ソ','so'],
+    ['タ','ta'],['チ','chi'],['ツ','tsu'],['テ','te'],['ト','to'],
+    ['ナ','na'],['ニ','ni'],['ヌ','nu'],['ネ','ne'],['ノ','no'],
+    ['ハ','ha'],['ヒ','hi'],['フ','fu'],['ヘ','he'],['ホ','ho'],
+    ['マ','ma'],['ミ','mi'],['ム','mu'],['メ','me'],['モ','mo'],
+    ['ヤ','ya'],['ユ','yu'],['ヨ','yo'],
+    ['ラ','ra'],['リ','ri'],['ル','ru'],['レ','re'],['ロ','ro'],
+    ['ワ','wa'],['ヲ','wo'],['ン','n']
+  ];
+
+  // ============================
+  // Progress / Streak
+  // ============================
+  function bumpStreak(){
+    const key='streak'; const rec=store.get(key,{last:"", count:0});
+    const today=todayKey();
+    if(rec.last===today) return rec.count;
+    const yesterday=new Date(Date.now()-86400000).toISOString().slice(0,10);
+    const next = { last: today, count: rec.last===yesterday? rec.count+1 : 1 };
+    store.set(key,next); return next.count;
+  }
+  function readStreak(){ const rec=store.get('streak',{last:"",count:0}); return rec.count }
+
+  // ============================
+  // Rendering
+  // ============================
+  const app = document.getElementById('app');
+  const lessonListEl = document.getElementById('lessonList');
+
+  function renderLessonList(){
+    const total=25; let html='';
+    for(let i=1;i<=total;i++){
+      html += `<button data-route="lesson" data-lesson="${i}">Bài ${i}</button>`;
+    }
+    lessonListEl.innerHTML = html;
+    // delegate
+    lessonListEl.addEventListener('click', (e)=>{
+      const btn = e.target.closest('button[data-route]'); if(!btn) return;
+      setActive(btn);
+      const n = +btn.dataset.lesson; showLesson(n);
+    });
+  }
+
+  function setActive(btn){
+    $$('.menu button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  function showOverview(){
+    $('#app').innerHTML = `
+      <div class="section">
+        <div class="kpi">
+          <div class="tile"><div class="muted">Bài đã có dữ liệu</div><div class="big">${Object.keys(LESSONS).length}/25</div></div>
+          <div class="tile"><div class="muted">Từ vựng mẫu</div><div class="big">${Object.values(LESSONS).reduce((s,l)=>s+(l.vocab?.length||0),0)}</div></div>
+          <div class="tile"><div class="muted">Câu hỏi quiz</div><div class="big">${Object.values(LESSONS).reduce((s,l)=>s+(l.quiz?.length||0),0)}</div></div>
+          <div class="tile"><div class="muted">Streak</div><div class="big">${readStreak()}🔥</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Bắt đầu học</h2>
+        <div class="list">
+          <div class="row"><div class="main"><b>Làm quiz nhanh (L1→L3)</b><span class="tag">Chọn đáp án đúng, có giải thích ngắn</span></div><button class="btn small" id="btnQuickQuiz">Làm ngay</button></div>
+          <div class="row"><div class="main"><b>Ôn bảng chữ (Hiragana/Katakana)</b><span class="tag">Bấm chữ để nghe (nếu trình duyệt hỗ trợ)</span></div><button class="btn small" data-route="kana">Mở</button></div>
+        </div>
+      </div>
+    `;
+    $('#btnQuickQuiz')?.addEventListener('click', ()=> showReview());
+  }
+
+  function showKana(){
+    const tile = ([k,r])=>`<div class="kana" onclick="speakJa('${k}')"><div class="jp">${k}</div><div class="ro">${r}</div></div>`;
+    app.innerHTML = `
+      <div class="card"><h2>Hiragana</h2><div class="kana-grid">${HIRAGANA.map(tile).join('')}</div></div>
+      <div class="card"><h2>Katakana</h2><div class="kana-grid">${KATAKANA.map(tile).join('')}</div></div>
+      <div class="card"><h2>Luyện gõ romaji</h2>
+        <div class="toolbar">
+          <input id="typeInput" type="text" placeholder="Gõ romaji cho ký tự hiển thị..." />
+          <span class="pill" id="typeStats">Đúng 0 • Sai 0</span>
+        </div>
+        <div style="font-size:48px; font-weight:800; margin-top:10px" id="typeChar">あ</div>
+      </div>
+    `;
+    initTypingPractice();
+  }
+
+  function initTypingPractice(){
+    const pool = shuffle([...HIRAGANA]);
+    let i=0, correct=0, wrong=0;
+    const charEl = $('#typeChar');
+    const input = $('#typeInput');
+    const stats = $('#typeStats');
+    function next(){ const [k,r]=pool[i%pool.length]; charEl.textContent=k; input.value=''; input.focus(); }
+    input.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ const [k,r]=pool[i%pool.length]; const ans=input.value.trim().toLowerCase(); if(ans===r){correct++} else {wrong++} i++; stats.textContent=`Đúng ${correct} • Sai ${wrong}`; next(); }})
+    next();
+  }
+
+  function showLesson(n){
+    bumpStreak(); updateStreakPill();
+    const L = LESSONS[n];
+    if(!L){ app.innerHTML = `<div class="card"><h2>Bài ${n}</h2><div class="muted">Chưa có dữ liệu cho bài này.</div></div>`; return; }
+    const vocab = (L.vocab||[]).map(v=>`
+      <div class="row">
+        <div class="main"><b>${v.jp}</b><span class="tag">${v.kana||''} • ${v.romaji||''}</span><div>${v.vi||''}</div></div>
+        <button class="btn small" onclick="speakJa('${v.kana||v.jp}')">🔊 Nghe</button>
+      </div>`).join('');
+
+    const grammar = (L.grammar||[]).map(g=>`
+      <details><summary>${g.title}</summary><div class="muted" style="margin:6px 0">${g.note||''}</div>${(g.examples||[]).map(ex=>`<div class="row"><div class="main"><b>${ex.jp}</b><span class="tag">${ex.romaji||''}</span><div>${ex.vi||''}</div></div><button class="btn small" onclick="speakJa('${ex.jp}')">🔊</button></div>`).join('')}</details>
+    `).join('');
+
+    const quiz = (L.quiz||[]).map((it,idx)=>`
+      <div class="card">
+        <div class="q">${it.q}</div>
+        <div class="quiz">${it.options.map(op=>`<button class="opt" data-lesson="${n}" data-idx="${idx}" data-op="${op}">${op}</button>`).join('')}</div>
+        <div class="muted" style="margin-top:8px">${it.explain? 'Gợi ý: '+it.explain: ''}</div>
+      </div>`).join('');
+
+    app.innerHTML = `
+      <div class="card"><h2>Bài ${n} — Từ vựng</h2><div class="list">${vocab||'<div class="muted">(Đang cập nhật)</div>'}</div></div>
+      <div class="card"><h2>Ngữ pháp</h2><div class="list">${grammar||'<div class="muted">(Đang cập nhật)</div>'}</div></div>
+      <div class="card"><h2>Quiz</h2>${quiz || '<div class="muted">(Chưa có câu hỏi)</div>'}</div>
+    `;
+
+    // handle quiz clicks
+    $$('#app .opt').forEach(btn=>{
+      btn.addEventListener('click', (e)=>{
+        const lesson=+btn.dataset.lesson; const idx=+btn.dataset.idx; const op=btn.dataset.op;
+        const item = LESSONS[lesson].quiz[idx];
+        const ok = item.answer===op;
+        $$('#app .opt').filter(b=>b.dataset.idx===String(idx)).forEach(b=>b.disabled=true);
+        btn.classList.add(ok? 'correct':'wrong');
+        // save progress
+        const key = `progress:L${lesson}`; const rec = store.get(key,{done:0, correct:0, total:0});
+        rec.total = (rec.total||0)+1; rec.correct = (rec.correct||0) + (ok?1:0); rec.done = Date.now();
+        store.set(key, rec);
+      })
+    })
+  }
+
+  function showReview(){
+    // Gather a mixed set from available lessons
+    const pool = Object.entries(LESSONS).flatMap(([ln,L])=> (L.quiz||[]).map((q,i)=>({ln:+ln, idx:i, ...q})) );
+    const qs = shuffle(pool).slice(0,10);
+    if(!qs.length){ app.innerHTML = '<div class="card">Chưa có câu hỏi để ôn.</div>'; return }
+
+    let cur=0, score=0;
+    function render(){
+      const it = qs[cur];
+      app.innerHTML = `
+        <div class="card"><div class="muted">Câu ${cur+1}/${qs.length} • Điểm: ${score}</div>
+        <div class="q" style="margin:8px 0 12px 0">${it.q}</div>
+        ${it.options.map(op=>`<button class="opt" data-op="${op}">${op}</button>`).join('')}
+        <div class="muted" style="margin-top:8px">${it.explain? 'Gợi ý: '+it.explain: ''}</div>
+        <div style="margin-top:12px" class="bar"><i style="width:${(cur/qs.length)*100}%"></i></div>
+        </div>`;
+      $$('#app .opt').forEach(b=> b.addEventListener('click', ()=>{
+        const ok = b.dataset.op===it.answer; b.classList.add(ok? 'correct':'wrong');
+        if(ok) score++;
+        setTimeout(()=>{ cur++; if(cur<qs.length) render(); else showReviewResult(score, qs.length); }, 500);
+      }))
+    }
+    render();
+  }
+  function showReviewResult(score,total){
+    app.innerHTML = `<div class="card"><h2>Kết quả</h2><p>Bạn đạt <b>${score}/${total}</b>.</p><button class="btn" id="again">Làm lại</button></div>`;
+    $('#again').addEventListener('click', showReview);
+  }
+
+  // ============================
+  // Theme + Export/Import
+  // ============================
+  function updateStreakPill(){ $('#streakPill').textContent = `Streak: ${readStreak()}🔥`; }
+  function toggleTheme(){ const dark = document.body.dataset.theme==='dark'; document.body.dataset.theme = dark? '' : 'dark'; }
+  $('#btnToggleTheme').addEventListener('click', toggleTheme);
+
+  $('#btnExport').addEventListener('click', ()=>{
+    const data = {};
+    Object.keys(localStorage).forEach(k=>{ if(k.startsWith('progress:') || k==='streak') data[k]=store.get(k); });
+    const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download='minna-n5-progress.json'; a.click(); URL.revokeObjectURL(url);
+  });
+
+  $('#btnImport').addEventListener('click', ()=> $('#fileInput').click());
+  $('#fileInput').addEventListener('change', (e)=>{
+    const file=e.target.files[0]; if(!file) return; const fr=new FileReader(); fr.onload=()=>{
+      try{ const obj=JSON.parse(fr.result);
+        Object.entries(obj).forEach(([k,v])=> localStorage.setItem(k, JSON.stringify(v)) );
+        alert('Đã import tiến độ.'); updateStreakPill();
+      }catch(err){ alert('File không hợp lệ.'); }
+    }; fr.readAsText(file);
+  });
+
+  // ============================
+  // Router (menu)
+  // ============================
+  function initMenu(){
+    // top buttons
+    $$('aside .menu [data-route]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        setActive(btn);
+        const r = btn.dataset.route;
+        if(r==='overview') showOverview();
+        if(r==='kana') showKana();
+        if(r==='review') showReview();
+      });
+    });
+  }
+
+  // Startup
+  renderLessonList(); initMenu(); showOverview(); updateStreakPill(); bumpStreak(); updateStreakPill();
+  </script>
+</body>
+</html>
