@@ -1,0 +1,71 @@
+<!DOCTYPE html><html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tower Defense Mini</title>
+  <style>
+    body {
+      margin: 0;
+      background: #222;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    canvas {
+      background: #444;
+      display: block;
+      margin: 20px auto;
+      border: 3px solid #fff;
+    }
+    #info {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>⚔️ Tower Defense Mini</h1>
+  <canvas id="gameCanvas" width="800" height="500"></canvas>
+  <div id="info">Кликни по полю, чтобы поставить башню (цена 50). У тебя: <span id="money">100</span> монет</div>
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");let money = 100;
+let enemies = [];
+let towers = [];
+let bullets = [];
+let frame = 0;
+
+class Enemy {
+  constructor() {
+    this.x = 0;
+    this.y = 220;
+    this.hp = 50;
+    this.speed = 1;
+  }
+  update() {
+    this.x += this.speed;
+  }
+  draw() {
+    ctx.fillStyle = "red";
+    ctx.fillRect(this.x, this.y, 20, 20);
+  }
+}
+
+class Tower {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.cooldown = 0;
+  }
+  update() {
+    if (this.cooldown > 0) this.cooldown--;
+    let target = enemies.find(e => Math.abs(e.x - this.x) < 150 && Math.abs(e.y - this.y) < 150);
+    if (target && this.cooldown === 0) {
+      bullets.push(new Bullet(this.x, this.y, target));
+      this.cooldown = 50;
+    }
+  }
+  draw() {
+    ctx.fillStyle = "blue";
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, 15, 0, Math
+
