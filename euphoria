@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Neon Gen Z Clothing</title>
+<link href="https://fonts.googleapis.com/css2?family=J+Airplane+Swash&display=swap" rel="stylesheet">
+<style>
+/* Global */
+body {
+  margin: 0;
+  font-family: 'J Airplane Swash', cursive;
+  background: linear-gradient(135deg, #ff00ff, #00ffff);
+  overflow-x: hidden;
+  color: #fff;
+}
+
+/* Intro */
+#intro-screen {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  background: black;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
+#enter-btn {
+  margin-top: 20px;
+  padding: 15px 30px;
+  font-size: 20px;
+  color: #fff;
+  background: linear-gradient(90deg, #ff00ff, #00ffff);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 0 20px #ff00ff, 0 0 40px #00ffff;
+  animation: glow 1.5s infinite alternate;
+}
+
+@keyframes glow {
+  from { box-shadow: 0 0 10px #ff00ff, 0 0 20px #00ffff; }
+  to { box-shadow: 0 0 30px #ff00ff, 0 0 60px #00ffff; }
+}
+
+#cassie-img {
+  width: 200px;
+  transition: transform 1s ease-in-out;
+}
+
+/* Main Shop */
+#main-shop {
+  display: none;
+  padding: 20px;
+}
+
+header h1 {
+  text-align: center;
+  font-size: 36px;
+  text-shadow: 0 0 10px #ff00ff, 0 0 20px #00ffff;
+}
+
+.products {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 30px;
+}
+
+.product-card {
+  width: 150px;
+  height: 150px;
+  background: linear-gradient(135deg, #ff00ff, #00ffff);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 20px;
+  box-shadow: 0 0 20px #ff00ff, 0 0 40px #00ffff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.product-card:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 40px #ff00ff, 0 0 80px #00ffff;
+}
+</style>
+</head>
+<body>
+
+<!-- Intro Screen -->
+<div id="intro-screen">
+  <div id="cassie-container">
+    <img src="https://i.ibb.co/9Vx8T9C/blonde-girl.png" alt="Cassie" id="cassie-img">
+  </div>
+  <button id="enter-btn">Enter</button>
+</div>
+
+<!-- Main Shop Page -->
+<div id="main-shop">
+  <header>
+    <h1>✨ Neon Vibes Clothing ✨</h1>
+  </header>
+  <section class="products">
+    <div class="product-card">T-shirt 1</div>
+    <div class="product-card">Hoodie 2</div>
+    <div class="product-card">Jeans 3</div>
+    <div class="product-card">Accessories 4</div>
+  </section>
+</div>
+
+<script>
+const enterBtn = document.getElementById('enter-btn');
+const introScreen = document.getElementById('intro-screen');
+const mainShop = document.getElementById('main-shop');
+const cassieImg = document.getElementById('cassie-img');
+
+enterBtn.addEventListener('click', () => {
+  // Mouth portal animation
+  cassieImg.style.transform = 'scale(3)';
+  
+  setTimeout(() => {
+    introScreen.style.display = 'none';
+    mainShop.style.display = 'block';
+  }, 1000);
+});
+</script>
+
+</body>
+</html>
