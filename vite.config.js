@@ -7,8 +7,7 @@ export default defineConfig(async ({ command, mode }) => {
       outDir: "deploy/_site",
       rollupOptions: {
         input: {
-          main: 'index.html',
-          404: '404.html',
+          about: 'about.html',
         },
       }
     }
