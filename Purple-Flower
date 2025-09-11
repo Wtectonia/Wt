@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Para sa'yo</title>
+    <style>
+      body {
+          margin: 0;
+          height: 100vh;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          background-color: #0d0124;
+          overflow: hidden;
+          flex-direction: column;
+      }
+
+      .envelope-wrapper {
+          position: relative;
+          width: 300px;
+          height: 200px;
+          margin-bottom: 20px;
+      }
+
+      .envelope {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          background-color: #7B1FA2;
+          border-radius: 10px;
+          box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+          transform-origin: bottom center;
+          transition: transform 1s;
+      }
+
+      .envelope-wrapper.open .envelope {
+          transform: rotateX(180deg);
+      }
+
+      .flap {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 50%;
+          background-color: #6A1B9A;
+          border-radius: 10px 10px 0 0;
+          transform-origin: top center;
+          transition: transform 1s;
+          z-index: 10;
+      }
+
+      .envelope-wrapper.open .flap {
+          transform: rotateX(180deg);
+      }
+
+      .card {
+          position: absolute;
+          width: 90%;
+          height: 90%;
+          top: 5%;
+          left: 5%;
+          background-color: white;
+          border-radius: 5px;
+          padding: 20px;
+          box-sizing: border-box;
+          opacity: 0;
+          transform: translateY(20px);
+          transition: transform 1s ease-out, opacity 1s ease-out;
+          text-align: center;
+          font-family: sans-serif;
+          color: #333;
+      }
+
+      .envelope-wrapper.open .card {
+          opacity: 1;
+          transform: translateY(0);
+          transition-delay: 1s;
+      }
+
+      .buttons {
+          position: absolute;
+          bottom: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          display: flex;
+          gap: 10px;
+      }
+
+      button {
+          padding: 10px 20px;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+          background-color: #8c5dff;
+          color: white;
+          font-size: 16px;
+          transition: background-color 0.3s;
+      }
+
+      button:hover {
+          background-color: #6a1b9a;
+      }
+
+      #closeBtn {
+          display: none;
+      }
+
+      /* Flower animation styles */
+      .flower-container {
+          position: absolute;
+          bottom: 0;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 200px;
+          height: 200px;
+          opacity: 0;
+          transition: opacity 1s ease-in-out;
+          display: flex;
+          justify-content: center;
+          align-items: flex-end;
+      }
+
+      .flower-container.show {
+          opacity: 1;
+          transition-delay: 2s;
+      }
+
+      .flower-stem {
+          width: 5px;
+          height: 0;
+          background-color: #4b3e70;
+          border-radius: 5px;
+          position: absolute;
+          bottom: 0;
+          left: 50%;
+          transform: translateX(-50%);
+          animation: grow-stem 2s forwards;
+          animation-delay: 0.5s;
+          opacity: 0;
+          transition: opacity 0.5s;
+      }
+
+      .flower-container.show .flower-stem {
+          opacity: 1;
+      }
+
+      .flower-leaf {
+          position: absolute;
+          background-color: #8c5dff;
+          width: 15px;
+          height: 40px;
+          border-radius: 50%;
+          transform-origin: bottom center;
+          transform: scale(0) rotate(0deg);
+          animation: grow-leaf 2s forwards, sway 5s infinite ease-in-out;
+          opacity: 0;
+          transition: opacity 0.5s;
+      }
+
+      .flower-container.show .flower-leaf {
+          opacity: 1;
+      }
+
+      .flower-leaf:nth-child(1) { animation-delay: 2.1s; transform: rotate(0deg); }
+      .flower-leaf:nth-child(2) { animation-delay: 2.2s; transform: rotate(50deg); }
+      .flower-leaf:nth-child(3) { animation-delay: 2.3s; transform: rotate(100deg); }
+      .flower-leaf:nth-child(4) { animation-delay: 2.4s; transform: rotate(150deg); }
+      .flower-leaf:nth-child(5) { animation-delay: 2.5s; transform: rotate(200deg); }
+      .flower-leaf:nth-child(6) { animation-delay: 2.6s; transform: rotate(250deg); }
+      .flower-leaf:nth-child(7) { animation-delay: 2.7s; transform: rotate(300deg); }
+
+      @keyframes grow-stem {
+          from { height: 0; }
+          to { height: 100px; }
+      }
+
+      @keyframes grow-leaf {
+          from { transform: scale(0); }
+          to { transform: scale(1); }
+      }
+
+      @keyframes sway {
+          0%, 100% { transform: rotate(-5deg); }
+          50% { transform: rotate(5deg); }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="envelope-wrapper" id="envelopeWrapper">
+      <div class="flap"></div>
+      <div class="envelope"></div>
+      <div class="card" id="card">
+        <h1>Para sa Pinakamamahal ko</h1>
+        <p>loveyy, just wanted you to know that happy 1, 2, 3, 4, and this is our 5 monthsarry is now in!!. We're going to be in 6 months already this october, I'm very happy that we're reaching it together loveyy!. I'll pray to god na ikaw padin untill this coming year of 2026, subrang pinapahalagahan ko talaga tong relasyon na'to cause yeah you are my first girlfriend. you that naman HAHAHHAHA and I do really appreciate all of your efforts and time that you gave me everyday❣️kahit this month hindi na tayo masyadong nakakapag-usap daily cause of the lack of time and dahil din sa subrang busy na natin sa goals natin and also sa school doings. i will love you, untill the end of my life Happy 5th Monthsarry loveyy!!😚❤️</p>
+      </div>
+    </div>
+    <div class="flower-container" id="flowerContainer">
+        <div class="flower-leaf leaf-1"></div>
+        <div class="flower-leaf leaf-2"></div>
+        <div class="flower-leaf leaf-3"></div>
+        <div class="flower-leaf leaf-4"></div>
+        <div class="flower-leaf leaf-5"></div>
+        <div class="flower-leaf leaf-6"></div>
+        <div class="flower-leaf leaf-7"></div>
+        <div class="flower-stem"></div>
+    </div>
+    <div class="buttons">
+      <button id="openBtn">Open</button>
+      <button id="closeBtn">Close</button>
+    </div>
+
+    <script>
+      const openBtn = document.getElementById('openBtn');
+      const closeBtn = document.getElementById('closeBtn');
+      const envelopeWrapper = document.getElementById('envelopeWrapper');
+      const card = document.getElementById('card');
+      const flowerContainer = document.getElementById('flowerContainer');
+
+      openBtn.addEventListener('click', () => {
+          envelopeWrapper.classList.add('open');
+          setTimeout(() => {
+              openBtn.style.display = 'none';
+              closeBtn.style.display = 'block';
+              card.style.opacity = 1;
+              card.style.transform = 'translateY(0)';
+              flowerContainer.classList.add('show');
+          }, 1500);
+      });
+
+      closeBtn.addEventListener('click', () => {
+          envelopeWrapper.classList.remove('open');
+          card.style.opacity = 0;
+          card.style.transform = 'translateY(20px)';
+          flowerContainer.classList.remove('show');
+          setTimeout(() => {
+              openBtn.style.display = 'block';
+              closeBtn.style.display = 'none';
+          }, 1500);
+      });
+    </script>
+  </body>
+</html>
