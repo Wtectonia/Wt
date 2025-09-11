@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Ngôi sao</title>
+  <style>
+    body { margin:0; background:black; }
+    canvas { display:block; margin:auto; background:black; }
+  </style>
+</head>
+<body>
+<canvas id="ngoisao" width="400" height="400"></canvas>
+<script>
+  const canvas = document.getElementById("ngoisao");
+  const ctx = canvas.getContext("2d");
+  let glow = 0;
+  function render() {
+    ctx.clearRect(0, 0, 400, 400);
+
+    // vầng sáng
+    const gradient = ctx.createRadialGradient(200,200,50,200,200,150);
+    gradient.addColorStop(0,"rgba(0,255,200,0.8)");
+    gradient.addColorStop(1,"rgba(0,0,0,0)");
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0,0,400,400);
+
+    // bóng người
+    ctx.fillStyle = `rgba(0,255,200,${0.6+0.4*Math.sin(glow)})`;
+    ctx.beginPath();
+    ctx.arc(200,120,40,0,Math.PI*2); // đầu
+    ctx.fill();
+    ctx.fillRect(180,160,40,100);    // thân
+    ctx.fillRect(150,160,30,80);     // tay trái
+    ctx.fillRect(220,160,30,80);     // tay phải
+    ctx.fillRect(180,260,15,80);     // chân trái
+    ctx.fillRect(205,260,15,80);     // chân phải
+
+    glow += 0.05;
+    requestAnimationFrame(render);
+  }
+  render();
+</script>
+</body>
+</html>
