@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Butterfly Study</title>
+<style>
+body{font-family:sans-serif;background:#f0f4f8;color:#111;margin:0;padding:0;display:flex;flex-direction:column;align-items:center;}
+header{background:#10b981;color:white;width:100%;padding:20px;text-align:center;font-size:1.5em;}
+section{margin:20px;width:90%;max-width:600px;}
+button{padding:10px 20px;margin:5px;border:none;border-radius:8px;background:#10b981;color:white;cursor:pointer;font-weight:700;}
+#timer{font-size:2em;text-align:center;margin:10px;}
+#butterfly{display:block;margin:20px auto;width:100px;transition: transform 0.3s;}
+.flashcard{border:1px solid #ccc;padding:20px;margin:10px 0;border-radius:10px;text-align:center;cursor:pointer;background:white;}
+.hidden{display:none;}
+.vip{background:gold;color:black;}
+.quiz-question{margin:10px 0;}
+.quiz-options button{display:block;margin:5px 0;}
+</style>
+</head>
+<body>
+
+<header>🦋 Butterfly Study</header>
+
+<section>
+<h2>Study Timer</h2>
+<div id="timer">25:00</div>
+<button id="startBtn">Start Study</button>
+<img id="butterfly" src="https://i.ibb.co/3sD0sGQ/butterfly1.png" alt="Butterfly">
+</section>
+
+<section>
+<h2>Flashcards</h2>
+<div class="flashcard" id="flashcard">Click to flip</div>
+<button id="nextCard">Next Card</button>
+</section>
+
+<section>
+<h2>Quiz</h2>
+<div id="quiz"></div>
+</section>
+
+<section>
+<button class="vip" onclick="alert('VIP feature unlock - payment placeholder')">Unlock VIP</button>
+</section>
+
+<script>
+  // ===== Timer & butterfly growth =====
+  let time = 25*60;
+  let timerInterval;
+  let stage = 1;
+  const butterfly = document.getElementById('butterfly');
+  const timerDisplay = document.getElementById('timer');
+
+  function updateTimerDisplay(){
+    let mins = Math.floor(time/60);
+    let secs = time%60;
+    timerDisplay.textContent = `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+  }
+
+  document.getElementById('startBtn').onclick = function(){
+    clearInterval(timerInterval);
+    time = 25*60;
+    updateTimerDisplay();
+    timerInterval = setInterval(()=>{
+      time--;
+      updateTimerDisplay();
+      if(time<=0){
+        clearInterval(timerInterval);
+        stage++;
+        if(stage>4) stage=4;
+        butterfly.style.transform = `scale(${1 + stage*0.3})`;
+        alert('Study session complete! Butterfly grew!');
+      }
+    },1000);
+  };
+
+  // ===== Flashcards =====
+  const cards = [
+    {q:"What is 5+7?", a:"12"},
+    {q:"Capital of South Africa?", a:"Pretoria"},
+    {q:"Water chemical formula?", a:"H2O"}
+  ];
+  let currentCard = 0;
+  const flashcardDiv = document.getElementById('flashcard');
+
+  function showCard(){
+    flashcardDiv.textContent = cards[currentCard].q;
+    flashcardDiv.dataset.showing = "question";
+  }
+
+  flashcardDiv.onclick = function(){
+    if(flashcardDiv.dataset.showing==="question"){
+      flashcardDiv.textContent = cards[currentCard].a;
+      flashcardDiv.dataset.showing = "answer";
+    } else {
+      flashcardDiv.textContent = cards[currentCard].q;
+      flashcardDiv.dataset.showing = "question";
+    }
+  }
+
+  document.getElementById('nextCard').onclick = function(){
+    currentCard = (currentCard+1)%cards.length;
+    showCard();
+  }
+
+  showCard();
+
+  // ===== Quiz =====
+  const quizData = [
+    {q:"2+3=?", options:["4","5","6"], answer:"5"},
+    {q:"SA Flag colors include?", options:["Red","Blue","Black"], answer:"All"},
+    {q:"H2O is?", options:["Oxygen","Hydrogen","Water"], answer:"Water"}
+  ];
+
+  const quizDiv = document.getElementById('quiz');
+  function showQuiz(){
+    quizDiv.innerHTML = '';
+    quizData.forEach((item,i)=>{
+      const qDiv = document.createElement('div');
+      qDiv.className='quiz-question';
+      qDiv.innerHTML=`<strong>${i+1}. ${item.q}</strong>`;
+      const optionsDiv = document.createElement('div');
+      optionsDiv.className='quiz-options';
+      item.options.forEach(opt=>{
+        const btn = document.createElement('button');
+        btn.textContent = opt;
+        btn.onclick=()=>alert(opt===item.answer?"Correct! 🎉":"Wrong ❌");
+        optionsDiv.appendChild(btn);
+      });
+      qDiv.appendChild(optionsDiv);
+      quizDiv.appendChild(qDiv);
+    });
+  }
+
+  showQuiz();
+</script>
+
+</body>
+</html>
