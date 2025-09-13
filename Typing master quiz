@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typing Master Quest: พิชิตคำสุทธิ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Kanit', sans-serif;
+            touch-action: manipulation; /* ป้องกัน double-tap zoom บนมือถือ */
+        }
+        .screen {
+            display: none;
+        }
+        .screen.active {
+            display: flex;
+        }
+        .modal-backdrop {
+            background-color: rgba(0,0,0,0.7);
+        }
+        .modal-content {
+            animation: zoomIn 0.3s ease-out;
+        }
+        @keyframes zoomIn {
+            from { transform: scale(0.5); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .board-grid {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            grid-template-rows: repeat(6, 1fr);
+            width: 90vw;
+            height: 54vw;
+            max-width: 1000px;
+            max-height: 600px;
+            position: relative;
+        }
+        .board-square {
+            border: 2px solid #fff;
+            color: white;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2px;
+            position: relative;
+        }
+        .pawn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            position: absolute;
+            transition: all 0.3s ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            text-shadow: 1px 1px 2px black;
+            z-index: 10;
+        }
+        .dice-animation {
+            animation: roll 0.5s ease-out;
+        }
+        @keyframes roll {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.5); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+        .flash-card {
+            background: linear-gradient(135deg, #ffecb3, #ffe082);
+            border: 4px solid #fdd835;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        .btn-fancy {
+             background: linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%);
+             box-shadow: 0 3px 5px 2px rgba(255, 105, 135, .3);
+             transition: all 0.3s ease-in-out;
+        }
+        .btn-fancy:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 10px 2px rgba(255, 105, 135, .4);
+        }
+        .input-styled {
+            transition: all 0.2s;
+        }
+        .input-styled:focus {
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+            border-color: #3B82F6;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4 bg-gradient-to-br from-blue-200 to-purple-300">
+
+    <!-- Start Screen -->
+    <div id="start-screen" class="screen active flex-col items-center justify-center text-center p-6 bg-white rounded-2xl shadow-xl max-w-lg w-full">
+        <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-2">Typing Master Quest 🧠</h1>
+        <p class="text-lg md:text-xl text-purple-600 mb-8">ภารกิจพิชิตคำสุทธิ!</p>
+        
+        <div id="player-setup" class="w-full">
+            <label for="player-count" class="block text-lg font-medium text-gray-700 mb-2">เลือกจำนวนผู้เล่น:</label>
+            <select id="player-count" class="w-full p-3 border border-gray-300 rounded-lg mb-4 text-center text-lg">
+                <option value="1">1 คน</option>
+                <option value="2">2 คน</option>
+                <option value="3">3 คน</option>
+                <option value="4">4 คน</option>
+            </select>
+            <div id="player-names" class="space-y-3 mb-6"></div>
+            <button id="start-game-btn" class="w-full py-3 px-6 text-white text-xl font-bold rounded-lg btn-fancy">เริ่มเกม 🚀</button>
+        </div>
+
+        <div class="mt-6 flex space-x-4">
+             <button id="rules-btn" class="py-2 px-5 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition">📜 กติกา</button>
+             <button id="flashcard-btn" class="py-2 px-5 bg-yellow-500 text-white font-semibold rounded-lg shadow-md hover:bg-yellow-700 transition">💡 การ์ดความรู้</button>
+        </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="game-screen" class="screen flex-col w-full h-full max-w-7xl mx-auto">
+        <div class="flex flex-col lg:flex-row gap-4 w-full">
+            <!-- Leaderboard -->
+            <div id="leaderboard" class="w-full lg:w-1/4 bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-lg order-2 lg:order-1">
+                <h2 class="text-2xl font-bold text-center mb-4 text-gray-800">ตารางคะแนน 🏆</h2>
+                <div id="leaderboard-content" class="space-y-3"></div>
+            </div>
+
+            <!-- Game Board & Controls -->
+            <div class="w-full lg:w-3/4 flex flex-col items-center order-1 lg:order-2">
+                 <div class="board-grid bg-blue-500/80 backdrop-blur-sm rounded-2xl shadow-2xl p-2" id="game-board">
+                    <!-- Pawns will be appended here by JS -->
+                 </div>
+                 <div class="mt-4 p-4 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-md">
+                    <div id="turn-indicator" class="text-center">
+                        <p class="text-lg">ตาของ:</p>
+                        <p id="current-player-name" class="text-2xl font-bold text-purple-600"></p>
+                    </div>
+                    <div id="dice-container" class="flex items-center gap-4">
+                        <div id="dice" class="w-20 h-20 bg-white rounded-lg shadow-md flex items-center justify-center text-5xl font-bold">🎲</div>
+                        <button id="roll-dice-btn" class="py-3 px-8 text-white text-xl font-bold rounded-lg btn-fancy">ทอยลูกเต๋า</button>
+                    </div>
+                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-container" class="hidden fixed inset-0 z-50">
+        <!-- Rules Modal -->
+        <div id="rules-modal" class="modal-backdrop hidden items-center justify-center p-4">
+            <div class="modal-content bg-white rounded-2xl shadow-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                <h2 class="text-3xl font-bold text-center mb-4 text-blue-600">📜 กติกาและวิธีคำนวณ</h2>
+                <div class="text-left space-y-4 text-gray-700">
+                    <div>
+                        <h3 class="font-bold text-lg text-yellow-600">ส่วนที่ 1: การนับดีด ⌨️</h3>
+                        <p>ในการพิมพ์ภาษาไทย <strong>4 ดีด = 1 คำ</strong>. เราจะนับทุกอย่างที่เคาะ: พยัญชนะ, สระ, วรรณยุกต์, เครื่องหมาย, และวรรคตอน.</p>
+                        <p class="mt-1 p-2 bg-yellow-100 rounded-lg">เช่น: "พงศ์จิรา" นับได้ พ-ง-ศ-์-จ-ิ-ร-า รวม <strong>8 ดีด</strong>.</p>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-lg text-red-600">ส่วนที่ 2: การนับคำผิด ❌</h3>
+                        <p>พิมพ์ตก, พิมพ์ซ้ำ, พิมพ์เกิน, เว้นวรรคผิด, พิมพ์สลับ ถือเป็นผิดทั้งหมด.</p>
+                        <p class="mt-1 p-2 bg-red-100 rounded-lg">ที่สำคัญ: จำนวนคำผิดที่นับได้ ต้อง <strong>คูณด้วย 10</strong> เพื่อคิดเป็นจำนวนคำที่ต้องหัก. (เช่น ผิด 3 ที่ = หัก 30 คำ)</p>
+                    </div>
+                     <div>
+                        <h3 class="font-bold text-lg text-green-600">ส่วนที่ 3: 4 ขั้นตอนพิชิตคำสุทธิ! ✨</h3>
+                        <ol class="list-decimal list-inside space-y-2">
+                           <li>(จำนวนดีดทั้งหมด) ÷ 4 = ผลลัพธ์ 1 (คำทั้งหมด)</li>
+                           <li>(จำนวนคำผิด) x 10 = ผลลัพธ์ 2 (คำที่ต้องหัก)</li>
+                           <li>(ผลลัพธ์ 1) - (ผลลัพธ์ 2) = ผลลัพธ์ 3 (คำหลังหักผิด)</li>
+                           <li>(ผลลัพธ์ 3) ÷ (เวลาที่พิมพ์) = <strong>คำสุทธิ (คำ/นาที)</strong></li>
+                        </ol>
+                         <p class="mt-2 p-2 bg-blue-100 rounded-lg">⭐ <strong>กฎพิเศษ:</strong> หากคำสุทธิมีค่าติดลบ ให้ปัดเป็น <strong>0</strong>.</p>
+                    </div>
+                </div>
+                <button onclick="closeModal('rules-modal')" class="mt-6 w-full py-2 bg-blue-500 text-white font-bold rounded-lg hover:bg-blue-600 transition">เข้าใจแล้ว!</button>
+            </div>
+        </div>
+
+        <!-- Flash Cards Modal -->
+        <div id="flashcard-modal" class="modal-backdrop hidden items-center justify-center p-4">
+            <div class="modal-content w-full max-w-md">
+                 <div id="flashcard-content" class="flash-card p-8 rounded-2xl text-center text-gray-800 relative aspect-[4/3] flex flex-col items-center justify-center">
+                    <!-- Flash card content will be injected here -->
+                 </div>
+                 <div class="flex justify-between mt-4">
+                    <button id="prev-flashcard" class="py-2 px-5 bg-gray-500 text-white font-semibold rounded-lg shadow-md hover:bg-gray-700 transition">⬅️ ก่อนหน้า</button>
+                    <button id="flashcard-close-btn" class="py-2 px-5 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 transition">❌ ปิด</button>
+                    <button id="next-flashcard" class="py-2 px-5 bg-gray-500 text-white font-semibold rounded-lg shadow-md hover:bg-gray-700 transition">ต่อไป ➡️</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Question Modal -->
+        <div id="question-modal" class="modal-backdrop hidden items-center justify-center p-4">
+             <div class="modal-content bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg">
+                <h2 class="text-2xl md:text-3xl font-bold text-center mb-4 text-purple-600">🧠 ถึงเวลาคำนวณ!</h2>
+                <div class="p-4 bg-purple-100 rounded-lg text-center mb-4">
+                    <p class="text-lg"><strong>โจทย์:</strong> พิมพ์ได้ <strong id="q-deed" class="text-purple-700"></strong> ดีด, มีคำผิด <strong id="q-errors" class="text-red-500"></strong> ที่, ใช้เวลา <strong id="q-time" class="text-blue-500"></strong> นาที</p>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex items-center">
+                        <label class="w-1/2" for="ans1">1. คำทั้งหมด (÷ 4)</label>
+                        <input type="number" id="ans1" class="w-1/2 p-2 border rounded-md input-styled">
+                    </div>
+                    <div class="flex items-center">
+                        <label class="w-1/2" for="ans2">2. คำที่ต้องหัก (x 10)</label>
+                        <input type="number" id="ans2" class="w-1/2 p-2 border rounded-md input-styled">
+                    </div>
+                    <div class="flex items-center">
+                        <label class="w-1/2" for="ans3">3. คำหลังหักผิด (-)</label>
+                        <input type="number" id="ans3" class="w-1/2 p-2 border rounded-md input-styled">
+                    </div>
+                     <div class="flex items-center">
+                        <label class="w-1/2 font-bold" for="ans4">4. คำสุทธิ (÷ เวลา)</label>
+                        <input type="number" id="ans4" class="w-1/2 p-2 border-2 border-purple-400 rounded-md font-bold input-styled">
+                    </div>
+                </div>
+                 <button id="submit-answer-btn" class="mt-6 w-full py-3 bg-green-500 text-white text-lg font-bold rounded-lg hover:bg-green-600 transition">ส่งคำตอบ!</button>
+            </div>
+        </div>
+
+        <!-- Message Modal -->
+        <div id="message-modal" class="modal-backdrop hidden items-center justify-center p-4">
+             <div class="modal-content bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm text-center">
+                <p id="message-icon" class="text-6xl mb-4"></p>
+                <h3 id="message-title" class="text-2xl font-bold mb-2"></h3>
+                <p id="message-text" class="text-gray-600 mb-6"></p>
+                <button id="message-ok-btn" class="w-full py-2 bg-blue-500 text-white font-bold rounded-lg hover:bg-blue-600 transition">ตกลง</button>
+            </div>
+        </div>
+
+        <!-- End Game Modal -->
+        <div id="end-game-modal" class="modal-backdrop hidden items-center justify-center p-4">
+            <div class="modal-content bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md text-center">
+                <h2 class="text-4xl font-bold mb-4">🏆 สิ้นสุดการแข่งขัน! 🏆</h2>
+                <div id="end-game-results" class="space-y-2"></div>
+                <div class="flex gap-4 mt-6">
+                    <button onclick="window.location.reload()" class="w-1/2 py-2 bg-blue-500 text-white font-bold rounded-lg hover:bg-blue-600 transition">เล่นอีกครั้ง 🔁</button>
+                    <button onclick="showScreen('start-screen')" class="w-1/2 py-2 bg-gray-500 text-white font-bold rounded-lg hover:bg-gray-600 transition">กลับเมนูหลัก 🏠</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // --- Constants ---
+        const PAW_COLORS = ['bg-red-500', 'bg-blue-500', 'bg-green-500', 'bg-yellow-500'];
+        const TOTAL_SQUARES = 30;
+        const flashCards = [
+            { title: "หัวใจของการคำนวณ 💖", text: "4 ดีด เท่ากับ 1 คำในภาษาไทยเสมอ!" },
+            { title: "บทลงโทษสุดโหด 😱", text: "จำไว้! 1 คำผิด จะถูกหักคะแนนเท่ากับ 10 คำเต็ม!" },
+            { title: "นับทุกอย่าง! ⌨️", text: "ไม่ว่าจะเป็นสระ, วรรณยุกต์, หรือเว้นวรรค ก็นับเป็น 1 ดีดทั้งหมด" },
+            { title: "กฎพิเศษ 🌟", text: "ถ้าคำนวณแล้วคำสุทธิติดลบ ไม่ต้องตกใจ! ให้ถือว่ามีค่าเท่ากับ 0" },
+            { title: "ขั้นตอนที่ 1️⃣", text: "หา 'คำทั้งหมด' โดยการนำ 'จำนวนดีด' มาหารด้วย 4" },
+            { title: "ขั้นตอนที่ 2️⃣", text: "หา 'คำที่ต้องหัก' โดยนำ 'จำนวนคำผิด' มาคูณด้วย 10" },
+        ];
+
+        // --- Game State ---
+        let gameState = {
+            players: [],
+            currentPlayerIndex: 0,
+            boardSquares: [],
+            gameActive: false,
+        };
+        
+        // --- UI Elements ---
+        const screens = {
+            start: document.getElementById('start-screen'),
+            game: document.getElementById('game-screen'),
+        };
+        const modals = {
+            container: document.getElementById('modal-container'),
+            rules: document.getElementById('rules-modal'),
+            flashcard: document.getElementById('flashcard-modal'),
+            question: document.getElementById('question-modal'),
+            message: document.getElementById('message-modal'),
+            endGame: document.getElementById('end-game-modal'),
+        };
+
+        const playerCountSelect = document.getElementById('player-count');
+        const playerNamesContainer = document.getElementById('player-names');
+        const startGameBtn = document.getElementById('start-game-btn');
+        const rulesBtn = document.getElementById('rules-btn');
+        const flashcardBtn = document.getElementById('flashcard-btn');
+        const gameBoard = document.getElementById('game-board');
+        const leaderboardContent = document.getElementById('leaderboard-content');
+        const currentPlayerNameEl = document.getElementById('current-player-name');
+        const diceEl = document.getElementById('dice');
+        const rollDiceBtn = document.getElementById('roll-dice-btn');
+        const submitAnswerBtn = document.getElementById('submit-answer-btn');
+
+        let currentFlashCardIndex = 0;
+
+        // --- Event Listeners ---
+        document.addEventListener('DOMContentLoaded', () => {
+            updatePlayerNameInputs();
+        });
+
+        playerCountSelect.addEventListener('change', updatePlayerNameInputs);
+        startGameBtn.addEventListener('click', startGame);
+        rulesBtn.addEventListener('click', () => openModal('rules-modal'));
+        flashcardBtn.addEventListener('click', () => {
+            currentFlashCardIndex = 0;
+            displayFlashCard();
+            openModal('flashcard-modal');
+        });
+
+        document.getElementById('prev-flashcard').addEventListener('click', () => {
+            currentFlashCardIndex = (currentFlashCardIndex - 1 + flashCards.length) % flashCards.length;
+            displayFlashCard();
+        });
+        document.getElementById('next-flashcard').addEventListener('click', () => {
+            currentFlashCardIndex = (currentFlashCardIndex + 1) % flashCards.length;
+            displayFlashCard();
+        });
+
+        document.getElementById('flashcard-close-btn').addEventListener('click', () => {
+            closeModal('flashcard-modal');
+        });
+
+        rollDiceBtn.addEventListener('click', rollDice);
+
+        // --- Functions ---
+        function updatePlayerNameInputs() {
+            const count = parseInt(playerCountSelect.value);
+            playerNamesContainer.innerHTML = '';
+            for (let i = 1; i <= count; i++) {
+                const playerDiv = document.createElement('div');
+                playerDiv.className = 'p-4 border rounded-lg bg-gray-50 space-y-3';
+                playerDiv.innerHTML = `
+                    <p class="font-bold text-lg text-left text-gray-700">ข้อมูลผู้เล่นคนที่ ${i}</p>
+                    <input type="text" id="player${i}-fullname" placeholder="ชื่อ-สกุล" class="w-full p-2 border border-gray-300 rounded-lg">
+                    <input type="text" id="player${i}-classinfo" placeholder="เลขที่ และ ระดับชั้น/แผนก" class="w-full p-2 border border-gray-300 rounded-lg">
+                `;
+                playerNamesContainer.appendChild(playerDiv);
+            }
+        }
+
+        function showScreen(screenId) {
+            Object.values(screens).forEach(screen => screen.classList.remove('active'));
+            if(screenId === 'game-screen'){
+                 screens.game.classList.add('active', 'flex-col', 'lg:flex-row');
+            } else {
+                 screens.start.classList.add('active');
+            }
+            // Hide modals when switching screens
+            closeModal();
+        }
+
+        function openModal(modalId) {
+            modals.container.classList.remove('hidden');
+            modals.container.classList.add('flex');
+            Object.values(modals).forEach(modal => {
+                 if(modal.id !== 'modal-container') modal.classList.add('hidden');
+                 if(modal.id === modalId) {
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+                 }
+            });
+        }
+        
+        function closeModal(modalId = null) {
+            if (modalId) {
+                modals[modalId.replace('-modal', '')].classList.add('hidden');
+                modals[modalId.replace('-modal', '')].classList.remove('flex');
+            } else {
+                Object.values(modals).forEach(modal => {
+                    if(modal.id !== 'modal-container') modal.classList.add('hidden');
+                });
+            }
+
+            // Check if any modal is still open
+            const isAnyModalOpen = Array.from(Object.values(modals)).some(
+                m => m.id !== 'modal-container' && m.classList.contains('flex')
+            );
+            
+            if (!isAnyModalOpen) {
+                 modals.container.classList.add('hidden');
+                 modals.container.classList.remove('flex');
+            }
+        }
+
+        function displayFlashCard() {
+            const card = flashCards[currentFlashCardIndex];
+            const contentEl = document.getElementById('flashcard-content');
+            contentEl.innerHTML = `
+                <h3 class="text-2xl font-bold mb-4">${card.title}</h3>
+                <p class="text-xl">${card.text}</p>
+                <div class="absolute bottom-2 text-sm text-gray-600">${currentFlashCardIndex + 1} / ${flashCards.length}</div>
+            `;
+        }
+        
+        function createBoard() {
+            gameBoard.innerHTML = '';
+            const path = [
+                // Top row (left to right)
+                [0,0], [0,1], [0,2], [0,3], [0,4], [0,5], [0,6], [0,7], [0,8], [0,9],
+                // Right column (top to bottom)
+                [1,9], [2,9], [3,9], [4,9], 
+                // Bottom row (right to left)
+                [5,9], [5,8], [5,7], [5,6], [5,5], [5,4], [5,3], [5,2], [5,1], [5,0],
+                // Left column (bottom to top)
+                [4,0], [3,0], [2,0], [1,0],
+                // Path to finish
+                [1,1], [1,2]
+            ];
+            
+            gameState.boardSquares = [];
+
+            for(let i=0; i<TOTAL_SQUARES; i++) {
+                const squareData = getSquareType(i);
+                gameState.boardSquares.push({ ...squareData, coords: path[i] });
+            }
+
+            const allSquares = [];
+            for (let r = 0; r < 6; r++) {
+                for (let c = 0; c < 10; c++) {
+                    allSquares.push({r,c});
+                }
+            }
+
+            allSquares.forEach(sq => {
+                const pathIndex = path.findIndex(p => p[0] === sq.r && p[1] === sq.c);
+                if (pathIndex !== -1) {
+                    const squareData = gameState.boardSquares[pathIndex];
+                    const squareEl = document.createElement('div');
+                    squareEl.className = 'board-square';
+                    squareEl.id = `square-${pathIndex}`;
+                    squareEl.style.backgroundColor = squareData.color;
+                    squareEl.innerHTML = `<span>${pathIndex === 0 ? '🏁 เริ่ม' : (pathIndex === TOTAL_SQUARES-1 ? '🏆 เส้นชัย' : pathIndex)}</span><span class="text-2xl">${squareData.icon}</span>`;
+                    squareEl.style.gridRowStart = sq.r + 1;
+                    squareEl.style.gridColumnStart = sq.c + 1;
+                    gameBoard.appendChild(squareEl);
+                }
+            });
+        }
+        
+        function getSquareType(index) {
+            if (index === 0) return { type: 'start', icon: '', color: '#10B981' };
+            if (index === TOTAL_SQUARES-1) return { type: 'finish', icon: '', color: '#F59E0B' };
+            if ([7, 18, 26].includes(index)) return { type: 'bonus', icon: '✨', color: '#3B82F6' };
+            if ([4, 15, 23].includes(index)) return { type: 'obstacle', icon: '😥', color: '#EF4444' };
+            if ([11, 28].includes(index)) return { type: 'flashcard', icon: '💡', color: '#F97316' };
+            return { type: 'question', icon: '🧠', color: 'rgba(255,255,255,0.2)' };
+        }
+
+        function startGame() {
+            const playerCount = parseInt(playerCountSelect.value);
+            gameState.players = [];
+            for (let i = 1; i <= playerCount; i++) {
+                const fullName = document.getElementById(`player${i}-fullname`).value.trim() || `ผู้เล่น ${i}`;
+                const classInfo = document.getElementById(`player${i}-classinfo`).value.trim();
+                const firstName = fullName.split(' ')[0];
+
+                let details = [
+                    classInfo,
+                ].filter(Boolean).join(' ');
+
+                let detailedName = fullName;
+                if (details) {
+                    detailedName += ` (${details})`;
+                }
+
+                gameState.players.push({
+                    firstName: firstName,
+                    fullName: fullName,
+                    detailedName: detailedName,
+                    score: 0,
+                    position: 0,
+                    color: PAW_COLORS[i - 1],
+                    pawnEl: null
+                });
+            }
+            
+            gameState.currentPlayerIndex = 0;
+            gameState.gameActive = true;
+            
+            showScreen('game-screen');
+            createBoard();
+            createPawns();
+            updateLeaderboard();
+            updateTurnIndicator();
+        }
+
+        function createPawns() {
+            gameState.players.forEach((player, index) => {
+                const pawn = document.createElement('div');
+                pawn.className = `pawn ${player.color}`;
+                pawn.id = `pawn-${index}`;
+                pawn.innerText = `${index + 1}`;
+                player.pawnEl = pawn;
+                gameBoard.appendChild(pawn);
+                movePawnToSquare(index, 0);
+            });
+        }
+        
+        function movePawnToSquare(playerIndex, squareIndex, isAnimating = false) {
+             const player = gameState.players[playerIndex];
+             const squareEl = document.getElementById(`square-${squareIndex}`);
+             if(!squareEl){ console.error("Square not found:", squareIndex); return;}
+             const boardRect = gameBoard.getBoundingClientRect();
+             const squareRect = squareEl.getBoundingClientRect();
+             
+             const top = squareRect.top - boardRect.top + (squareRect.height / 2) - 15;
+             const left = squareRect.left - boardRect.left + (squareRect.width / 2) - 15 + (playerIndex * 5 - 10);
+             
+             player.pawnEl.style.top = `${top}px`;
+             player.pawnEl.style.left = `${left}px`;
+             player.position = squareIndex;
+        }
+
+        function updateLeaderboard() {
+            leaderboardContent.innerHTML = '';
+            const sortedPlayers = [...gameState.players].sort((a, b) => b.score - a.score);
+            sortedPlayers.forEach((player, index) => {
+                const playerEl = document.createElement('div');
+                playerEl.className = 'p-3 rounded-lg flex items-center justify-between transition-all duration-300';
+                const isCurrent = player.fullName === gameState.players[gameState.currentPlayerIndex].fullName;
+                playerEl.style.backgroundColor = isCurrent ? 'rgba(167, 139, 250, 0.4)' : 'rgba(255,255,255,0.5)';
+                playerEl.innerHTML = `
+                    <div class="flex items-center overflow-hidden">
+                        <span class="font-bold text-lg mr-3">${index+1}.</span>
+                        <div class="w-5 h-5 rounded-full ${player.color} mr-2"></div>
+                        <span class="font-semibold text-gray-800 truncate" title="${player.detailedName}">${player.fullName}</span>
+                    </div>
+                    <span class="font-bold text-xl text-purple-700">${player.score}</span>
+                `;
+                leaderboardContent.appendChild(playerEl);
+            });
+        }
+        
+        function updateTurnIndicator() {
+            const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+            currentPlayerNameEl.textContent = currentPlayer.firstName;
+            currentPlayerNameEl.style.color = getPlayerColorCode(currentPlayer.color);
+            rollDiceBtn.disabled = false;
+            rollDiceBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            updateLeaderboard();
+        }
+
+        function getPlayerColorCode(colorClass) {
+            const colorMap = {
+                'bg-red-500': '#EF4444',
+                'bg-blue-500': '#3B82F6',
+                'bg-green-500': '#22C55E',
+                'bg-yellow-500': '#EAB308'
+            };
+            return colorMap[colorClass] || '#6B7280';
+        }
+
+        function rollDice() {
+            rollDiceBtn.disabled = true;
+            rollDiceBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            let rollCount = 0;
+            const rollInterval = setInterval(() => {
+                diceEl.textContent = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'][Math.floor(Math.random() * 6)];
+                rollCount++;
+                if (rollCount > 10) {
+                    clearInterval(rollInterval);
+                    const result = Math.ceil(Math.random() * 6);
+                    diceEl.textContent = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'][result-1];
+                    diceEl.classList.add('dice-animation');
+                    setTimeout(() => diceEl.classList.remove('dice-animation'), 500);
+                    
+                    movePlayer(result);
+                }
+            }, 50);
+        }
+
+        function movePlayer(steps) {
+            const player = gameState.players[gameState.currentPlayerIndex];
+            let currentPos = player.position;
+            let targetPos = currentPos + steps;
+
+            let stepCounter = 0;
+            const moveInterval = setInterval(() => {
+                if (stepCounter < steps) {
+                    currentPos = (currentPos + 1);
+                     if (currentPos >= TOTAL_SQUARES) { // Land on finish
+                         currentPos = TOTAL_SQUARES - 1;
+                         stepCounter = steps; // End movement
+                     }
+                    movePawnToSquare(gameState.currentPlayerIndex, currentPos, true);
+                    stepCounter++;
+                } else {
+                    clearInterval(moveInterval);
+                    if (targetPos >= TOTAL_SQUARES -1) {
+                         player.position = TOTAL_SQUARES - 1;
+                         endGame();
+                    } else {
+                         handleSquareLand(player.position);
+                    }
+                }
+            }, 300);
+        }
+
+        function handleSquareLand(squareIndex) {
+            const square = gameState.boardSquares[squareIndex];
+            switch(square.type) {
+                case 'question':
+                    generateQuestion();
+                    break;
+                case 'bonus':
+                    showMessage('โบนัส! ✨', 'ติดเทอร์โบ! ได้ทอยลูกเต๋าอีกครั้ง', '🎉', () => {
+                         rollDiceBtn.disabled = false;
+                         rollDiceBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    });
+                    break;
+                case 'obstacle':
+                     showMessage('อุปสรรค! 😥', 'นิ้วล็อค! ข้ามการเล่นในตาถัดไป', '😱', nextTurn);
+                    break;
+                case 'flashcard':
+                    const player = gameState.players[gameState.currentPlayerIndex];
+                    player.score += 10;
+                    updateLeaderboard();
+                    
+                    showMessage('การ์ดความรู้! 💡', 'คุณได้รับ 10 คะแนนพิเศษ! กด "ตกลง" เพื่อเปิดการ์ด', '📚', () => {
+                        currentFlashCardIndex = Math.floor(Math.random() * flashCards.length);
+                        displayFlashCard();
+                        openModal('flashcard-modal');
+
+                        // Temporarily override the close button's action to proceed the game
+                        document.getElementById('flashcard-close-btn').onclick = () => {
+                            closeModal('flashcard-modal');
+                            nextTurn();
+                            // Restore default behavior
+                            document.getElementById('flashcard-close-btn').onclick = null;
+                        };
+                    });
+                    break;
+                default:
+                    nextTurn();
+            }
+        }
+        
+        function generateQuestion() {
+            const deed = Math.floor(Math.random() * 201) + 100; // 100-300
+            const errors = Math.floor(Math.random() * 6); // 0-5
+            const time = Math.floor(Math.random() * 3) + 2; // 2-4
+            
+            const ans1 = Math.floor(deed / 4);
+            const ans2 = errors * 10;
+            const ans3 = ans1 - ans2;
+            let ans4 = Math.floor(ans3 / time);
+            if (ans4 < 0) ans4 = 0;
+
+            document.getElementById('q-deed').textContent = deed;
+            document.getElementById('q-errors').textContent = errors;
+            document.getElementById('q-time').textContent = time;
+
+            ['ans1','ans2','ans3','ans4'].forEach(id => document.getElementById(id).value = '');
+            
+            // Store correct answers for checking
+            submitAnswerBtn.dataset.answers = JSON.stringify({ans1, ans2, ans3, ans4});
+            submitAnswerBtn.onclick = checkAnswer;
+            
+            openModal('question-modal');
+        }
+
+        function checkAnswer() {
+            const player = gameState.players[gameState.currentPlayerIndex];
+
+            const correctAnswers = JSON.parse(submitAnswerBtn.dataset.answers);
+            const userAnswers = {
+                ans1: parseInt(document.getElementById('ans1').value) || 0,
+                ans2: parseInt(document.getElementById('ans2').value) || 0,
+                ans3: parseInt(document.getElementById('ans3').value) || 0,
+                ans4: parseInt(document.getElementById('ans4').value) || 0,
+            };
+
+            const allCorrect = userAnswers.ans1 === correctAnswers.ans1 &&
+                              userAnswers.ans2 === correctAnswers.ans2 &&
+                              userAnswers.ans3 === correctAnswers.ans3 &&
+                              userAnswers.ans4 === correctAnswers.ans4;
+            
+            closeModal('question-modal');
+
+            if (allCorrect) {
+                player.score += 100;
+                updateLeaderboard();
+                showMessage('ถูกต้อง! 🎉', 'สุดยอดไปเลย! คุณได้รับ 100 คะแนน', '✅', nextTurn);
+            } else {
+                 let correctionText = `เฉลย: 1. ${correctAnswers.ans1}, 2. ${correctAnswers.ans2}, 3. ${correctAnswers.ans3}, 4. ${correctAnswers.ans4}`;
+                 showMessage('คำตอบผิด 💔', `เสียดายจัง ลองใหมในตาหน้านะ! ${correctionText}`, '❌', nextTurn);
+            }
+        }
+        
+        function showMessage(title, text, icon, callback) {
+            document.getElementById('message-title').textContent = title;
+            document.getElementById('message-text').innerHTML = text; // Use innerHTML for potential formatting
+            document.getElementById('message-icon').textContent = icon;
+            document.getElementById('message-ok-btn').onclick = () => {
+                closeModal('message-modal');
+                if (callback) callback();
+            };
+            openModal('message-modal');
+        }
+
+        function nextTurn() {
+            gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % gameState.players.length;
+            updateTurnIndicator();
+        }
+
+        function endGame() {
+            if(!gameState.gameActive) return;
+            gameState.gameActive = false;
+
+            const sortedPlayers = [...gameState.players].sort((a, b) => b.score - a.score);
+            const resultsContainer = document.getElementById('end-game-results');
+            resultsContainer.innerHTML = '';
+
+            const medals = ['🥇', '🥈', '🥉'];
+            sortedPlayers.forEach((player, index) => {
+                const rankEl = document.createElement('div');
+                rankEl.className = 'p-3 border-b flex justify-between items-center';
+                const medal = index < 3 ? medals[index] : '🎖️';
+                rankEl.innerHTML = `
+                    <div class="flex items-center overflow-hidden">
+                        <span class="text-2xl mr-4">${medal}</span>
+                        <p class="font-semibold truncate text-left" title="${player.detailedName}">${player.fullName}</p>
+                    </div>
+                    <span class="font-bold text-lg">${player.score} คะแนน</span>
+                `;
+                 resultsContainer.appendChild(rankEl);
+            });
+
+            openModal('end-game-modal');
+        }
+    </script>
+
+</body>
+</html>
+
