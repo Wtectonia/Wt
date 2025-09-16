@@ -1,0 +1,126 @@
+import numpy as np
+import pyautogui
+import time
+
+class GameState:
+    def __init__(self, players, community_cards, pot_size, current_bet, button_position):
+        self.players = players
+        self.community_cards = community_cards
+        self.pot_size = pot_size
+        self.current_bet = current_bet
+        self.button_position = button_position
+
+    def update_state(self, action, player_index, bet_amount):
+        # Update the game state based on the action taken by a player
+        if action == "fold":
+            self.players[player_index]["status"] = "folded"
+        elif action == "call":
+            self.players[player_index]["bet"] += bet_amount
+            self.pot_size += bet_amount
+            self.current_bet = 0
+        elif action == "raise":
+            self.players[player_index]["bet"] += bet_amount
+            self.pot_size += bet_amount
+            self.current_bet = bet_amount
+        elif action == "bet":
+            self.players[player_index]["bet"] += bet_amount
+            self.pot_size += bet_amount
+            self.current_bet = bet_amount
+
+    def get_current_player(self):
+        # Return the index of the current player to act
+        for i, player in enumerate(self.players):
+            if player["status"] != "folded":
+                return i
+        return -1
+
+class PokerBot:
+    def __init__(self, strategy):
+        self.strategy = strategy
+
+    def make_decision(self, game_state):
+        # Use the strategy to make a decision
+        action, bet_amount = self.strategy.decide_action(game_state)
+        return action, bet_amount
+
+class GTOStrategy:
+    def decide_action(self, game_state):
+        # Implement GTO decision-making logic
+        # For simplicity, let's assume the bot always calls
+        return "call", game_state.current_bet
+
+class ExploitativeStrategy:
+    def decide_action(self, game_state):
+        # Implement exploitative decision-making logic
+        # For simplicity, let's assume the bot always raises
+        return "raise", game_state.current_bet * 2
+
+class PokerSiteInteractor:
+    def __init__(self, site_name):
+        self.site_name = site_name
+
+    def place_bet(self, bet_amount):
+        # Simulate placing a bet on the poker site
+        pyautogui.click(100, 200)  # Click on the bet input field
+        pyautogui.write(str(bet_amount))
+        pyautogui.press('enter')
+        time.sleep(1)  # Wait for the action to be registered
+
+    def fold(self):
+        # Simulate folding on the poker site
+        pyautogui.click(300, 200)  # Click on the fold button
+        time.sleep(1)
+
+    def call(self):
+        # Simulate calling on the poker site
+        pyautogui.click(400, 200)  # Click on the call button
+        time.sleep(1)
+
+    def raise_bet(self, bet_amount):
+        # Simulate raising the bet on the poker site
+        pyautogui.click(500, 200)  # Click on the raise input field
+        pyautogui.write(str(bet_amount))
+        pyautogui.press('enter')
+        time.sleep(1)
+
+def main():
+    # Initialize game state
+    players = [{"name": "Player1", "bet": 0, "status": "active"},
+               {"name": "Player2", "bet": 0, "status": "active"},
+               {"name": "Player3", "bet": 0, "status": "active"}]
+    community_cards = []
+    pot_size = 100
+    current_bet = 0
+    button_position = 0
+    game_state = GameState(players, community_cards, pot_size, current_bet, button_position)
+
+    # Initialize strategy
+    strategy = GTOStrategy()
+
+    # Initialize bot
+    bot = PokerBot(strategy)
+
+    # Initialize poker site interactor
+    interactor = PokerSiteInteractor("PokerStars")
+
+    # Main game loop
+    while True:
+        current_player_index = game_state.get_current_player()
+        if current_player_index == -1:
+            break  # No more players to act
+        action, bet_amount = bot.make_decision(game_state)
+
+        if action == "fold":
+            interactor.fold()
+        elif action == "call":
+            interactor.call()
+        elif action == "raise":
+            interactor.raise_bet(bet_amount)
+        elif action == "bet":
+            interactor.place_bet(bet_amount)
+
+        # Update game state
+        game_state.update_state(action, current_player_index, bet_amount)
+
+if __name__ == "__main__":
+    main()
