@@ -1,56 +1,122 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <!-- 
-      This is an HTML comment
-      You can write text in a comment and the content won't be visible in the page
-    -->
-
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="icon" href="https://glitch.com/favicon.ico" />
-
-  <!--
-      This is the page head - it contains info the browser uses
-      Like the title, which appears on the browser tab but not inside the page
-      Further down you'll see the content that displays in the page
-    -->
-  <title>Hello World!</title>
-
-  <!-- The website stylesheet -->
-  <link rel="stylesheet" href="/style.css" />
-
-  <!-- The website JavaScript file -->
-  <script src="/script.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edu Casino Lab</title>
+<style>
+body{font-family:sans-serif;background:#f0f0f0;margin:0;padding:0;}
+nav{background:#1e40af;color:white;padding:1rem;display:flex;justify-content:space-between;}
+nav button{margin-left:0.5rem;padding:0.5rem 1rem;background:white;color:#1e40af;border:none;border-radius:5px;cursor:pointer;}
+.container{padding:1rem;}
+button{cursor:pointer;}
+.card{background:white;padding:1rem;margin:0.5rem 0;border-radius:5px;box-shadow:0 2px 5px rgba(0,0,0,0.1);}
+input{padding:0.5rem;margin-right:0.5rem;width:100px;}
+</style>
 </head>
-
 <body>
-  <!--
-      The body includes the content you see in the page
-      Each element is defined using tags, like this <div></div>
-      The attributes like class="wrapper" let us style elements in the CSS
-    -->
-  <div class="wrapper">
-    <div class="content" role="main">
-      <h1 class="title">Oh hi website!</h1>
-      <img src="/cool-website.svg" class="illustration" alt="cool website" />
-      <div class="instructions">
-        <p>
-          Fork <a href="https://github.com/glitchdotcom/website-to-compute">this project</a> and open it in a GitHub Codespace.
-        </p>
-        <p> Follow the steps in the README to deploy your new website to Fastly in a few steps!
-        </p>
+<nav>
+<div>Edu Casino Lab</div>
+<div>
+<button onclick="show('dashboard')">Dashboard</button>
+<button onclick="show('games')">Games</button>
+<button onclick="show('wallet')">Wallet</button>
+<button onclick="show('deposit')">Deposit/Withdraw</button>
+<button onclick="show('leaderboard')">Leaderboard</button>
+<button onclick="show('admin')">Admin</button>
+</div>
+</nav>
 
-      </div>
+<div class="container">
+<div id="dashboard"><h2>Dashboard</h2><p>Welcome to Edu Casino Lab! Virtual coins only.</p></div>
 
-      <footer class="footer">
-        <div>
-          <a class="remix" href="https://github.com/glitchdotcom/website-to-compute">🚧 Get your own site</a>
-        </div>
-      </footer>
-    </div>
-  </div>
+<div id="games" style="display:none">
+<h2>Games Lobby</h2>
+<div class="card" onclick="playGame('Teen Patti')">Teen Patti</div>
+<div class="card" onclick="playGame('Slots')">Slots</div>
+<div class="card" onclick="playGame('Roulette')">Roulette</div>
+<div id="gameScreen"></div>
+</div>
+
+<div id="wallet" style="display:none">
+<h2>Wallet</h2>
+<p id="balance">Balance: 10000 coins</p>
+</div>
+
+<div id="deposit" style="display:none">
+<h2>Deposit / Withdraw</h2>
+<input type="number" id="amount" placeholder="Amount">
+<button onclick="deposit()">Deposit</button>
+<button onclick="withdraw()">Withdraw</button>
+<p id="msg"></p>
+</div>
+
+<div id="leaderboard" style="display:none">
+<h2>Leaderboard</h2>
+<ol id="leaders"></ol>
+</div>
+
+<div id="admin" style="display:none">
+<h2>Admin Panel</h2>
+<ul>
+<li>Monitor users</li>
+<li>Simulate transactions</li>
+<li>Update games</li>
+</ul>
+</div>
+</div>
+
+<script>
+let balance = 10000;
+let leaderboard = [{name:'User1',score:5000},{name:'User2',score:4000},{name:'User3',score:3000}];
+
+function show(page){
+  ['dashboard','games','wallet','deposit','leaderboard','admin'].forEach(p=>{
+    document.getElementById(p).style.display = p===page?'block':'none';
+  });
+}
+
+function deposit(){
+  let amt = Number(document.getElementById('amount').value);
+  if(amt<=0){document.getElementById('msg').innerText='Enter valid amount';return;}
+  balance+=amt;
+  document.getElementById('balance').innerText='Balance: '+balance+' coins';
+  document.getElementById('msg').innerText=`Deposited ${amt} coins`;
+  document.getElementById('amount').value='';
+}
+
+function withdraw(){
+  let amt = Number(document.getElementById('amount').value);
+  if(amt<=0){document.getElementById('msg').innerText='Enter valid amount';return;}
+  if(amt>balance){document.getElementById('msg').innerText='Insufficient balance';return;}
+  let fee = amt*0.02;
+  balance-=amt;
+  document.getElementById('balance').innerText='Balance: '+balance+' coins';
+  document.getElementById('msg').innerText=`Withdrew ${amt-fee} coins (Fee: ${fee})`;
+  document.getElementById('amount').value='';
+}
+
+function playGame(name){
+  let bet = prompt(`Enter bet amount for ${name}`);
+  bet=Number(bet);
+  if(bet<=0 || bet>balance){alert('Invalid bet');return;}
+  let win = Math.random()>0.5;
+  let payout = win? bet*2 : 0;
+  let house = bet*0.05;
+  balance = win? balance+payout : balance-bet;
+  document.getElementById('balance').innerText='Balance: '+balance+' coins';
+  document.getElementById('gameScreen').innerHTML=`<p>${win?'You won!':'You lost!'} Payout: ${payout}, House Edge: ${house}</p>`;
+  leaderboard.push({name:'You',score:balance});
+  updateLeaderboard();
+}
+
+function updateLeaderboard(){
+  let html='';
+  leaderboard.sort((a,b)=>b.score-a.score).forEach(l=>{html+=`<li>${l.name} - ${l.score}</li>`;});
+  document.getElementById('leaders').innerHTML=html;
+}
+
+updateLeaderboard();
+</script>
 </body>
-
 </html>
