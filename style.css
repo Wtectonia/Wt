@@ -1,133 +1,71 @@
-/* A set of default styles */
-:root {
-  /* Generic sizing for the page */
-  --wrapper-height: 100vh;
-
-  /* Fonts for different elements */
-  --font-family: sans-serif;
-  --font-family-list: monospace;
-
-  /* Colors you'll see cascade through the elements */
-  --color-bg: #99ddff; /* Used for the page body background */
-  --color-bg-alt: #33b1ff; /* Used for social icons on hover */
-  --color-text-main: #004099; /* List text ann social icons on hover */
-  --color-primary: #006aff; /* Headers and borders */
-  --color-highlight: #e7f7fe; /* Highlights */
-}
-
-/* Basic page style resets */
+/* Reset CSS cơ bản */
 * {
+  margin: 0;
+  padding: 0;
   box-sizing: border-box;
 }
-[hidden] {
-  display: none !important;
-}
 
-/* Page structure */
+/* Nền và font chữ toàn trang */
 body {
-  font-family: var(--font-family);
-  background-color: var(--color-bg);
+  font-family: "Segoe UI", Arial, sans-serif;
+  background-color: #faf9f6; /* nền sáng nhẹ */
+  color: #333;
+  line-height: 1.6;
+  padding: 20px;
+}
+
+/* Tiêu đề chính */
+h1, h2, h3 {
+  color: #2c3e50;
+  margin-bottom: 15px;
   text-align: center;
-  margin: 0;
-  font-size:large;
 }
-/* Page structure */
+
+/* Container chính */
 .wrapper {
-  min-height: var(--wrapper-height);
-  display: grid;
-  place-items: center;
-  margin: 0;
-  padding:1rem 2rem;
-}
-.content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  max-width: 900px;
+  margin: 0 auto;
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
 }
 
-.illustration {
-  max-width:30%;
-  margin:1rem 0 2rem 0;
-  animation: 1s ease-out 0s 1 spinIn;
-}
-@keyframes spinIn {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-.illustration-404 {
-  max-width:30%;
-  margin:1rem 0 2rem 0;
-  animation: 1s ease-out 0s 1 spinUp;
-  filter: grayscale(100%);
-  animation-fill-mode: forwards;
-} 
-@keyframes spinUp {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(180deg);
-  }
-}
-
-/* Typography */
-p {
-  margin: 1rem;
-  line-height: 1.3em;
-}
-p,
-h1,
-h2,
-h3,
-h4,
-h5 {
-  color: var(--color-text-main);
-}
-h1 {
-  display: inline-flex;
-  color: var(--color-primary);
-  justify-content: center;
-}
-/* Link styles */
-a:link,
-a:visited {
+/* Link */
+a {
+  color: #3498db;
   text-decoration: none;
-  border-bottom: 2px solid var(--color-primary);
-  color: var(--color-primary);
-  transition: background 0.2s linear;
-  font-weight: bold;
+  transition: 0.3s;
 }
-a:hover,
-a:active,
-a:focus {
-  background: var(--color-primary);
-  color:var(--color-highlight);
+
+a:hover {
+  color: #2980b9;
+  text-decoration: underline;
 }
-/* Navigation grid */
-.footer {
-  display: flex;
-  justify-content: space-between;
-  margin: 2rem auto 0;
-  padding: 1.5rem 0 0.5rem 0;
-  width: 100%;
-  flex-wrap: wrap;
-  display: flex;
-  justify-content: flex-end;
+
+/* Danh sách truyện */
+.story-list {
+  list-style: none;
+  padding: 0;
 }
-a.remix {
-  background: var(--color-bg-alt);
-  color:var(--color-highlight);
-  border: 2px solid var(--color-highlight);
-  border-radius: 5px;
-  padding:0.5rem;
-  font-weight:bold;
+
+.story-list li {
+  background: #f7f7f7;
+  margin-bottom: 10px;
+  padding: 10px 15px;
+  border-left: 5px solid #3498db;
+  border-radius: 8px;
+  transition: 0.3s;
 }
-a.remix:hover {
-  background: var(--color-primary);
-  color:var(--color-highlight);
+
+.story-list li:hover {
+  background: #e9f5ff;
+}
+
+/* Footer */
+footer {
+  text-align: center;
+  font-size: 14px;
+  color: #666;
+  margin-top: 30px;
 }
