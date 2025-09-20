@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>BX ai v0.1</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #111; color: #eee; text-align: center; }
+    #chat { width: 90%; max-width: 600px; margin: 20px auto; background: #222; padding: 15px; border-radius: 10px; height: 400px; overflow-y: auto; }
+    .msg { margin: 5px 0; padding: 8px; border-radius: 6px; }
+    .user { background: #0084ff; color: #fff; text-align: right; }
+    .ai { background: #333; color: #eee; text-align: left; }
+    input { width: 80%; padding: 10px; border-radius: 6px; border: none; margin-top: 10px; }
+    button { padding: 10px; border-radius: 6px; border: none; background: #0084ff; color: #fff; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>🤖 BX ai v0.1</h1>
+  <div id="chat"></div>
+  <input id="input" placeholder="اكتب رسالتك...">
+  <button onclick="send()">إرسال</button>
+
+  <script>
+    let memory = JSON.parse(localStorage.getItem("bx_memory")) || {};
+
+    function addMessage(text, sender) {
+      let chat = document.getElementById("chat");
+      let msg = document.createElement("div");
+      msg.className = "msg " + sender;
+      msg.innerText = text;
+      chat.appendChild(msg);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    function send() {
+      let input = document.getElementById("input");
+      let text = input.value.trim();
+      if (!text) return;
+      addMessage(text, "user");
+
+      // معالجة أمر "اتعلم"
+      if (text.startsWith("اتعلم")) {
+        let parts = text.replace("اتعلم", "").trim().split("=");
+        if (parts.length === 2) {
+          let key = parts[0].trim();
+          let value = parts[1].trim();
+          memory[key] = value;
+          localStorage.setItem("bx_memory", JSON.stringify(memory));
+          addMessage(`تمام! اتعلمت إن "${key}" = "${value}"`, "ai");
+        } else {
+          addMessage("استخدم الصيغة: اتعلم [السؤال] = [الإجابة]", "ai");
+        }
+      } else {
+        // لو السؤال موجود في الذاكرة
+        if (memory[text]) {
+          addMessage(memory[text], "ai");
+        } else {
+          addMessage("مش عارف الإجابة دي، علّمني باستخدام: اتعلم [سؤال] = [إجابة]", "ai");
+        }
+      }
+
+      input.value = "";
+    }
+  </script>
+</body>
+</html>
