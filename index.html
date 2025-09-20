@@ -1,56 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <!-- 
-      This is an HTML comment
-      You can write text in a comment and the content won't be visible in the page
-    -->
-
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="icon" href="https://glitch.com/favicon.ico" />
-
-  <!--
-      This is the page head - it contains info the browser uses
-      Like the title, which appears on the browser tab but not inside the page
-      Further down you'll see the content that displays in the page
-    -->
-  <title>Hello World!</title>
-
-  <!-- The website stylesheet -->
-  <link rel="stylesheet" href="/style.css" />
-
-  <!-- The website JavaScript file -->
-  <script src="/script.js" defer></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>For My Kuchupuchuu 💗</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(to right, #ff7eb3, #ff758c);
+      color: white;
+      text-align: center;
+      padding: 50px;
+    }
+    button {
+      background: white;
+      color: #ff4f81;
+      padding: 15px 30px;
+      border: none;
+      border-radius: 20px;
+      font-size: 18px;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: transform 0.2s;
+    }
+    button:hover {
+      transform: scale(1.1);
+    }
+    .hidden {
+      display: none;
+    }
+    .message, .songs {
+      margin-top: 40px;
+      font-size: 20px;
+      line-height: 1.6;
+    }
+    a {
+      color: yellow;
+      font-weight: bold;
+      text-decoration: none;
+    }
+  </style>
 </head>
-
 <body>
-  <!--
-      The body includes the content you see in the page
-      Each element is defined using tags, like this <div></div>
-      The attributes like class="wrapper" let us style elements in the CSS
-    -->
-  <div class="wrapper">
-    <div class="content" role="main">
-      <h1 class="title">Oh hi website!</h1>
-      <img src="/cool-website.svg" class="illustration" alt="cool website" />
-      <div class="instructions">
-        <p>
-          Fork <a href="https://github.com/glitchdotcom/website-to-compute">this project</a> and open it in a GitHub Codespace.
-        </p>
-        <p> Follow the steps in the README to deploy your new website to Fastly in a few steps!
-        </p>
+  <h1>💖 Hey Beautiful 💖</h1>
+  <button id="startBtn">Click this and let me tell you how amazing you are!</button>
 
-      </div>
-
-      <footer class="footer">
-        <div>
-          <a class="remix" href="https://github.com/glitchdotcom/website-to-compute">🚧 Get your own site</a>
-        </div>
-      </footer>
-    </div>
+  <div class="message hidden" id="message">
+    <p>My dear <b>Kuchupuchuuuu</b>, you are so sweet, smart, funny, beautiful, and intelligent. The way you post ig stories, the way you talk about things all I see is someone who is sharp, thoughtful, and politically aware. Honestly, I don’t even know what else to say, because I want to tell you so much… but I’m just afraid I might annoy you. Still, I want you to know that I love you so much 😭💗💐</p>
+    <button id="songBtn">Here are some songs that remind me of you 🎶</button>
   </div>
-</body>
 
+  <div class="songs hidden" id="songs">
+    <h2>🎵 Songs for You</h2>
+    <p><a href="https://youtu.be/7_v1-PUjOyk" target="_blank">Lovers Rock — TV Girl</a></p>
+    <p><a href="https://youtu.be/Zv7vO2wI1Rc" target="_blank">Something About You — Eyedress</a></p>
+  </div>
+
+  <script>
+    const startBtn = document.getElementById("startBtn");
+    const songBtn = document.getElementById("songBtn");
+    const message = document.getElementById("message");
+    const songs = document.getElementById("songs");
+
+    startBtn.addEventListener("click", () => {
+      startBtn.classList.add("hidden");
+      message.classList.remove("hidden");
+    });
+
+    songBtn.addEventListener("click", () => {
+      message.classList.add("hidden");
+      songs.classList.remove("hidden");
+    });
+  </script>
+</body>
 </html>
