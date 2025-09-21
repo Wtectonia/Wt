@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>S + A 💛</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(to bottom, #1a2a6c, #2a5298, #6c5ce7);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      padding: 20px;
+      position: relative;
+    }
+
+    .container {
+      max-width: 800px;
+      width: 100%;
+      text-align: center;
+      z-index: 10;
+      position: relative;
+    }
+
+    .title {
+      font-size: 2.8rem;
+      margin-bottom: 2rem;
+      color: #FFD700;
+      text-shadow: 0 0 15px rgba(255, 215, 0, 0.7);
+      font-weight: bold;
+    }
+
+    .poem-container {
+      background: rgba(0, 0, 0, 0.6);
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      border: 2px solid rgba(255, 215, 0, 0.4);
+      position: relative;
+      z-index: 10;
+    }
+
+    .verse {
+      font-size: 1.3rem;
+      line-height: 1.8;
+      margin: 18px 0;
+      font-style: italic;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 1s ease, transform 1s ease;
+      color: #FFD700;
+    }
+    .verse.visible { opacity: 1; transform: translateY(0); }
+
+    .controls {
+      margin-top: 25px;
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      background: linear-gradient(45deg, #FFD700, #FFA500);
+      color: #333;
+      border: none;
+      padding: 14px 28px;
+      border-radius: 50px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      font-size: 1.1rem;
+    }
+    .btn:hover { transform: translateY(-3px); }
+    .btn:active { transform: translateY(1px); }
+
+    .tap-message {
+      position: fixed;
+      bottom: 30px;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      font-size: 1.5rem;
+      color: #FFD700;
+      text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+      opacity: 0;
+      transition: opacity 1s ease;
+      z-index: 20;
+      pointer-events: none;
+    }
+    .tap-message.visible { opacity: 1; animation: pulse 2s infinite; }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    /* Corazón gigante con iniciales */
+    .big-heart {
+      display: none;
+      font-size: 8rem;
+      color: red;
+      text-align: center;
+      animation: beat 1s infinite;
+      text-shadow: 0 0 25px rgba(255,0,0,0.7);
+      position: relative;
+      z-index: 12;
+    }
+    @keyframes beat {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+    }
+    .initials {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 3rem;
+      font-weight: bold;
+      color: white;
+      text-shadow: 0 0 15px #000;
+    }
+
+    /* Girasoles en lluvia */
+    .sunflower {
+      position: absolute;
+      font-size: 1.8rem;
+      animation: fall linear forwards;
+      filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.6));
+    }
+    @keyframes fall {
+      0% { transform: translateY(-50px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+    }
+
+    /* Flores en tap */
+    .tap-flower {
+      position: absolute;
+      font-size: 2rem;
+      opacity: 0;
+      animation: growFlower 3s forwards;
+      filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.7));
+    }
+    @keyframes growFlower {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0); }
+      50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+    }
+
+    /* Flor amarilla desde abajo */
+    .growing-flower {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%) scaleY(0);
+      font-size: 4rem;
+      opacity: 0;
+      filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.8));
+      animation: growFromBottom 3s forwards;
+      z-index: 11;
+    }
+    @keyframes growFromBottom {
+      0% { transform: translateX(-50%) scaleY(0); opacity: 0; }
+      50% { transform: translateX(-50%) scaleY(1.2); opacity: 1; }
+      100% { transform: translateX(-50%) scaleY(1); opacity: 1; }
+    }
+
+    /* Fuegos artificiales */
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      z-index: 5;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="fireworks"></canvas>
+
+  <div class="container">
+    <h1 class="title">🌻 Flores Amarillas Para Ti 🌻</h1>
+
+    <div class="poem-container" id="poemContainer">
+      <div class="poem-text">
+        <p class="verse">Como un girasol que busca la alborada,</p>
+        <p class="verse">mi alma se vuelve hacia tu mirada.</p>
+        <p class="verse">Eres el sol que guía mi existencia,</p>
+        <p class="verse">la luz que desvanece toda ausencia.</p>
+      </div>
+      <div class="controls">
+        <button class="btn" id="startBtn">Comenzar Animación</button>
+      </div>
+    </div>
+
+    <div class="big-heart" id="bigHeart">❤️
+      <div class="initials">S + A</div>
+    </div>
+  </div>
+
+  <div class="tap-message" id="tapMessage">✨ Toca la pantalla para hacer crecer más flores ✨</div>
+
+  <!-- Música -->
+  <audio id="bgMusic" loop>
+    <source src="https://www.bensound.com/bensound-music/bensound-romantic.mp3" type="audio/mp3">
+  </audio>
+
+  <script>
+    const verses = document.querySelectorAll('.verse');
+    const startBtn = document.getElementById('startBtn');
+    const poemContainer = document.getElementById('poemContainer');
+    const bigHeart = document.getElementById('bigHeart');
+    const tapMessage = document.getElementById('tapMessage');
+    const music = document.getElementById('bgMusic');
+    const body = document.body;
+
+    startBtn.addEventListener('click', () => {
+      music.play(); 
+      verses.forEach((verse, i) => {
+        setTimeout(() => {
+          verse.classList.add('visible');
+          createSunflowerRain(); 
+          if (i === verses.length - 1) {
+            setTimeout(() => {
+              poemContainer.style.display = "none";
+              showHeart();
+            }, 1500);
+          }
+        }, i * 2000);
+      });
+    });
+
+    function showHeart() {
+      bigHeart.style.display = "block";
+      tapMessage.classList.add("visible");
+      launchFireworks();
+      growBottomFlower(); // 🌻 flor desde abajo
+    }
+
+    /* Lluvia de girasoles 🌻 */
+    function createSunflowerRain() {
+      for (let i = 0; i < 10; i++) {
+        const flower = document.createElement('div');
+        flower.classList.add('sunflower');
+        flower.textContent = '🌻';
+        flower.style.left = `${Math.random() * 100}%`;
+        flower.style.animationDuration = `${3 + Math.random()*2}s`;
+        body.appendChild(flower);
+        setTimeout(() => flower.remove(), 5000);
+      }
+    }
+
+    /* Tap para crear flores 🌻 */
+    document.addEventListener('click', (e) => {
+      if (bigHeart.style.display === "block") createTapFlower(e.clientX, e.clientY);
+    });
+    document.addEventListener('touchstart', (e) => {
+      if (bigHeart.style.display === "block") {
+        const touch = e.touches[0];
+        createTapFlower(touch.clientX, touch.clientY);
+      }
+    });
+
+    function createTapFlower(x, y) {
+      const flower = document.createElement('div');
+      flower.classList.add('tap-flower');
+      flower.textContent = '🌻';
+      flower.style.left = `${x}px`;
+      flower.style.top = `${y}px`;
+      document.body.appendChild(flower);
+      setTimeout(() => flower.remove(), 3000);
+    }
+
+    /* Flor desde abajo */
+    function growBottomFlower() {
+      const flower = document.createElement('div');
+      flower.classList.add('growing-flower');
+      flower.textContent = '🌻';
+      body.appendChild(flower);
+      setTimeout(() => flower.remove(), 5000);
+    }
+
+    /* Fuegos artificiales */
+    const canvas = document.getElementById('fireworks');
+    const ctx = canvas.getContext('2d');
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    let fireworks = [];
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    function launchFireworks() {
+      setInterval(() => {
+        fireworks.push(new Firework(Math.random()*canvas.width, canvas.height));
+      }, 600);
+      animate();
+    }
+
+    class Firework {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.particles = [];
+        for (let i=0;i<50;i++){
+          this.particles.push({
+            x: x, y: y,
+            angle: Math.random() * 2 * Math.PI,
+            speed: Math.random() * 4 + 2,
+            radius: 2,
+            alpha: 1
+          });
+        }
+      }
+      update(){
+        this.particles.forEach(p => {
+          p.x += Math.cos(p.angle) * p.speed;
+          p.y += Math.sin(p.angle) * p.speed;
+          p.alpha -= 0.01;
+        });
+      }
+      draw(){
+        this.particles.forEach(p => {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius, 0, 2*Math.PI);
+          ctx.fillStyle = `rgba(255, ${Math.floor(Math.random()*255)}, 0, ${p.alpha})`;
+          ctx.fill();
+        });
+      }
+    }
+
+    function animate(){
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      fireworks.forEach((f,i)=>{
+        f.update();
+        f.draw();
+        if(f.particles[0].alpha <=0){
+          fireworks.splice(i,1);
+        }
+      });
+      requestAnimationFrame(animate);
+    }
+  </script>
+</body>
+</html>
