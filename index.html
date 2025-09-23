@@ -1,56 +1,44 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="id">
 <head>
-  <!-- 
-      This is an HTML comment
-      You can write text in a comment and the content won't be visible in the page
-    -->
-
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="icon" href="https://glitch.com/favicon.ico" />
-
-  <!--
-      This is the page head - it contains info the browser uses
-      Like the title, which appears on the browser tab but not inside the page
-      Further down you'll see the content that displays in the page
-    -->
-  <title>Hello World!</title>
-
-  <!-- The website stylesheet -->
-  <link rel="stylesheet" href="/style.css" />
-
-  <!-- The website JavaScript file -->
-  <script src="/script.js" defer></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart School System - SMK 3 Palu</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-  <!--
-      The body includes the content you see in the page
-      Each element is defined using tags, like this <div></div>
-      The attributes like class="wrapper" let us style elements in the CSS
-    -->
-  <div class="wrapper">
-    <div class="content" role="main">
-      <h1 class="title">Oh hi website!</h1>
-      <img src="/cool-website.svg" class="illustration" alt="cool website" />
-      <div class="instructions">
-        <p>
-          Fork <a href="https://github.com/glitchdotcom/website-to-compute">this project</a> and open it in a GitHub Codespace.
-        </p>
-        <p> Follow the steps in the README to deploy your new website to Fastly in a few steps!
-        </p>
+  <header>
+    <h1>Smart School System</h1>
+    <nav>
+      <a href="#jadwal">Jadwal</a>
+      <a href="#absensi">Absensi</a>
+      <a href="#pengumuman">Pengumuman</a>
+    </nav>
+  </header>
 
-      </div>
+  <main>
+    <section id="jadwal">
+      <h2>📅 Jadwal Pelajaran</h2>
+      <p>Contoh: Senin - Matematika, IPA, Bahasa Indonesia</p>
+    </section>
 
-      <footer class="footer">
-        <div>
-          <a class="remix" href="https://github.com/glitchdotcom/website-to-compute">🚧 Get your own site</a>
-        </div>
-      </footer>
-    </div>
-  </div>
+    <section id="absensi">
+      <h2>✅ Absensi Siswa</h2>
+      <input type="text" id="nama" placeholder="Masukkan nama">
+      <button onclick="absen()">Absen</button>
+      <ul id="daftar-absensi"></ul>
+    </section>
+
+    <section id="pengumuman">
+      <h2>📢 Pengumuman</h2>
+      <p>Ujian Tengah Semester dimulai tanggal 10 Oktober 2025.</p>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2025 SMK 3 Palu</p>
+  </footer>
+
+  <script src="script.js"></script>
 </body>
-
 </html>
